@@ -13,12 +13,12 @@ import (
 
 // TreeFormatter formats output as a tree view
 type TreeFormatter struct {
-	pricer *pricing.Pricer
+	pricingService *pricing.Pricer
 }
 
 // NewTreeFormatter creates a new tree formatter
-func NewTreeFormatter(pricer *pricing.Pricer) *TreeFormatter {
-	return &TreeFormatter{pricer: pricer}
+func NewTreeFormatter(pricingService *pricing.Pricer) *TreeFormatter {
+	return &TreeFormatter{pricingService: pricingService}
 }
 
 // Format outputs results in tree format
@@ -39,7 +39,11 @@ func (f *TreeFormatter) Format(results []*processor.Result, cfg *config.Config) 
 				if cfg.Verbose && result.Cached {
 					cachedMark = " (cached)"
 				}
-				fmt.Printf("%s: %d tokens%s\n", result.Path, result.Tokens, cachedMark)
+				tokensPerLine := ""
+				if result.LineCount > 0 {
+					tokensPerLine = fmt.Sprintf(" (%.1f tokens/line)", result.AvgTokensPerLine)
+				}
+				fmt.Printf("%s: %d tokens%s%s\n", result.Path, result.Tokens, tokensPerLine, cachedMark)
 				totalTokens += result.Tokens
 				totalFiles++
 			}
@@ -52,11 +56,11 @@ func (f *TreeFormatter) Format(results []*processor.Result, cfg *config.Config) 
 		fmt.Printf("Total: %d tokens across %d files\n", totalTokens, totalFiles)
 
 		if cfg.ShowCost {
-			cost := f.pricer.CalculateCost(totalTokens, cfg.Model)
+			cost := f.pricingService.CalculateCost(totalTokens, cfg.Model)
 			fmt.Printf("Estimated cost: $%.6f\n", cost)
 		}
 	} else if cfg.ShowCost && totalTokens > 0 {
-		cost := f.pricer.CalculateCost(totalTokens, cfg.Model)
+		cost := f.pricingService.CalculateCost(totalTokens, cfg.Model)
 		fmt.Printf("Estimated cost: $%.6f\n", cost)
 	}
 
@@ -79,13 +83,17 @@ func printTreeNode(node *processor.Result, prefix string, verbose bool) {
 				if verbose && child.Cached {
 					cachedMark = " (cached)"
 				}
+				tokensPerLine := ""
+				if child.LineCount > 0 {
+					tokensPerLine = fmt.Sprintf(" (%.1f tokens/line)", child.AvgTokensPerLine)
+				}
 
 				connector := "├─"
 				if isLast {
 					connector = "└─"
 				}
 
-				fmt.Printf("%s%s %s: %d tokens%s\n", prefix, connector, filepath.Base(child.Path), child.Tokens, cachedMark)
+				fmt.Printf("%s%s %s: %d tokens%s%s\n", prefix, connector, filepath.Base(child.Path), child.Tokens, tokensPerLine, cachedMark)
 			}
 		}
 	}

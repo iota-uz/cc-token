@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -31,7 +32,9 @@ func NewClient(apiKey string) *Client {
 	codec, err := tiktoken.NewClaude()
 	if err != nil {
 		// Fallback to nil encoding if initialization fails
-		// Token visualization will use streaming API as fallback
+		// Token visualization will not work but token counting will
+		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize Claude tokenizer codec: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Token visualization features will be unavailable.\n")
 		return &Client{
 			apiKey: apiKey,
 			httpClient: &http.Client{
@@ -43,6 +46,8 @@ func NewClient(apiKey string) *Client {
 
 	encoding, err := tiktoken.NewEncoding(codec)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize tokenizer encoding: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Token visualization features will be unavailable.\n")
 		return &Client{
 			apiKey: apiKey,
 			httpClient: &http.Client{

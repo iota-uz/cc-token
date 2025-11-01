@@ -29,6 +29,7 @@ type Config struct {
 	Plain            bool   // Use plain text output (no ANSI colors)
 	OutputFile       string // Output file path for HTML export
 	NoBrowser        bool   // Skip auto-opening browser for web modes
+	Analyze          bool   // Perform comprehensive token optimization analysis
 }
 
 // IsValidVisualizationMode checks if the given mode is a valid visualization mode

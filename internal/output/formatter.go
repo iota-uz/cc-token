@@ -14,13 +14,13 @@ type Formatter interface {
 
 // OutputResults formats and outputs the token counting results in either tree or JSON format
 // based on the configuration.
-func OutputResults(results []*processor.Result, cfg *config.Config, pricer *pricing.Pricer) error {
+func OutputResults(results []*processor.Result, cfg *config.Config, pricingService *pricing.Pricer) error {
 	var formatter Formatter
 
 	if cfg.JSONOutput {
-		formatter = NewJSONFormatter(pricer)
+		formatter = NewJSONFormatter(pricingService)
 	} else {
-		formatter = NewTreeFormatter(pricer)
+		formatter = NewTreeFormatter(pricingService)
 	}
 
 	return formatter.Format(results, cfg)

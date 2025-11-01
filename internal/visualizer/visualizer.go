@@ -14,15 +14,15 @@ import (
 
 // Visualizer handles token visualization workflows
 type Visualizer struct {
-	apiClient *api.Client
-	pricer    *pricing.Pricer
+	apiClient      *api.Client
+	pricingService *pricing.Pricer
 }
 
 // New creates a new Visualizer instance
-func New(apiClient *api.Client, pricer *pricing.Pricer) *Visualizer {
+func New(apiClient *api.Client, pricingService *pricing.Pricer) *Visualizer {
 	return &Visualizer{
-		apiClient: apiClient,
-		pricer:    pricer,
+		apiClient:      apiClient,
+		pricingService: pricingService,
 	}
 }
 
@@ -81,7 +81,7 @@ func (v *Visualizer) Run(path string, cfg *config.Config) error {
 
 	// Calculate cost (based on API token count which includes message overhead)
 	contentTokens := len(tokens)
-	cost := v.pricer.CalculateCost(estimatedTokens, cfg.Model)
+	cost := v.pricingService.CalculateCost(estimatedTokens, cfg.Model)
 
 	result := &Result{
 		Content:     content,
@@ -104,7 +104,7 @@ func (v *Visualizer) Run(path string, cfg *config.Config) error {
 // confirmVisualization prompts the user to confirm they want to proceed with visualization
 func (v *Visualizer) confirmVisualization(estimatedTokens int, model string) bool {
 	// Calculate cost (same as count mode since we're using client-side tokenization)
-	cost := v.pricer.CalculateCost(estimatedTokens, model)
+	cost := v.pricingService.CalculateCost(estimatedTokens, model)
 
 	fmt.Fprintf(os.Stderr, "\n💡 Token Visualization\n")
 	fmt.Fprintf(os.Stderr, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")

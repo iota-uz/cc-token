@@ -10,6 +10,7 @@ import (
 	"github.com/iota-uz/cc-token/internal/api"
 	"github.com/iota-uz/cc-token/internal/cache"
 	"github.com/iota-uz/cc-token/internal/config"
+	"github.com/iota-uz/cc-token/internal/utils"
 )
 
 // Processor handles file and directory processing for token counting
@@ -71,10 +72,15 @@ func (p *Processor) processStdin() (*Result, error) {
 		return nil, err
 	}
 
+	// Calculate line count and average tokens per line
+	lineCount, avgTokensPerLine := utils.CalculateLineMetrics(string(content), tokens)
+
 	return &Result{
-		Path:   "<stdin>",
-		Tokens: tokens,
-		Cached: false,
+		Path:             "<stdin>",
+		Tokens:           tokens,
+		Cached:           false,
+		LineCount:        lineCount,
+		AvgTokensPerLine: avgTokensPerLine,
 	}, nil
 }
 
@@ -227,9 +233,14 @@ func (p *Processor) processFile(filePath string, info os.FileInfo) (*Result, err
 		}
 	}
 
+	// Calculate line count and average tokens per line
+	lineCount, avgTokensPerLine := utils.CalculateLineMetrics(string(content), tokens)
+
 	return &Result{
-		Path:   filePath,
-		Tokens: tokens,
-		Cached: cached,
+		Path:             filePath,
+		Tokens:           tokens,
+		Cached:           cached,
+		LineCount:        lineCount,
+		AvgTokensPerLine: avgTokensPerLine,
 	}, nil
 }

@@ -82,7 +82,7 @@ Note: Visualization only works with single files, not directories.`,
 		path := args[1]
 
 		// Create visualizer
-		viz := visualizer.New(apiClient, pricer)
+		viz := visualizer.New(apiClient, pricingService)
 
 		// Run visualization
 		return viz.Run(path, cfg)

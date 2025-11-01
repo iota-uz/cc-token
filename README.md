@@ -6,6 +6,7 @@ A production-grade command-line tool for counting tokens in files and directorie
 
 - **Single File or Directory Processing**: Count tokens for individual files or entire directory trees
 - **Token Visualization**: Web-based interactive viewer, HTML export, and colored terminal visualization
+- **Token Analysis**: Comprehensive token optimization analysis with recommendations (files only)
 - **Smart Caching**: Local file-based cache to avoid redundant API calls
 - **Cost Estimation**: Automatic cost calculation based on current Claude API pricing
 - **Gitignore Support**: Respects `.gitignore` files to skip unwanted files
@@ -80,6 +81,7 @@ Available for all commands:
 | `--plain`       |       | bool    | `false`             | Use plain text output (no ANSI colors)          |
 | `--output`      | `-o`  | string  | `""`                | Output file path for HTML export                |
 | `--no-browser`  |       | bool    | `false`             | Skip auto-opening browser for web visualization |
+| `--analyze`     |       | bool    | `false`             | Perform token optimization analysis (files only) |
 
 ## Examples
 
@@ -229,6 +231,141 @@ Remove all cached token counts:
 ```bash
 cc-token cache clear
 ```
+
+## Token Analysis
+
+`cc-token` can analyze individual files to identify token optimization opportunities and provide actionable recommendations.
+
+### Overview
+
+The `--analyze` flag performs a comprehensive analysis of a single file's token usage patterns, including:
+
+- **Efficiency Score**: Overall assessment of token usage (0-100 scale)
+- **Token Density Heatmap**: Visual representation of token distribution across the file
+- **Category Breakdown**: Distribution by content type (prose, code, URLs, formatting, whitespace)
+- **Line-by-Line Insights**: Detailed analysis of the 25 most token-expensive lines
+- **Pattern Detection**: Identifies optimization opportunities like repeated URLs, excessive whitespace, and inefficient formatting
+- **Actionable Recommendations**: Prioritized suggestions with estimated token savings
+
+### Usage
+
+Analyze a single file to identify optimization opportunities:
+
+```bash
+cc-token count --analyze document.txt
+```
+
+**Constraints:**
+- Works with **single files only** (no directories or multiple files)
+- Does **not support stdin** input (use `-` argument)
+- Automatically skips the cost confirmation prompt for analysis mode
+
+### Example Output
+
+The analysis output includes:
+
+```
+📊 Token Analysis Report
+================================================================================
+File: document.txt
+Total Tokens: 1,234  |  Lines: 45  |  Efficiency Score: 72/100
+================================================================================
+
+📈 Token Distribution (Heatmap)
+Low ░░░  Moderate ▒▒▒  High ███
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Content Categories
+  📝 Prose:       456 tokens (37%)
+  💻 Code:        234 tokens (19%)
+  🔗 URLs:        145 tokens (12%)
+  ✨ Formatting:  198 tokens (16%)
+  ⬜ Whitespace:  201 tokens (16%)
+
+🎯 Quick Wins
+  • Consolidate 12 consecutive empty lines → Save 48 tokens
+  • URL appears 5 times, use link references → Save 87 tokens
+
+💡 Recommendations
+  [Priority 1] Remove excessive blank lines (Lines 5-8, 12-15, 23-26)
+    Before: "...\n\n\n\n..."  →  After: "...\n..."
+    Estimated savings: 35 tokens
+
+  [Priority 2] Use reference-style links for repeated URLs (Lines 3, 7, 14, 19, 31)
+    Before: "See [link](https://...)"  →  After: "See [link][1]"
+    Estimated savings: 42 tokens
+
+  [Priority 3] Remove trailing whitespace from long lines
+    Before: "content    "  →  After: "content"
+    Estimated savings: 18 tokens
+
+📊 Summary
+  Total potential savings: 95 tokens (7.7% reduction)
+```
+
+### Output Modes
+
+The analysis respects the `--plain` flag for plain text output without ANSI colors or emoji:
+
+```bash
+cc-token count --analyze --plain document.txt
+```
+
+This is useful for automation and piping output to other tools.
+
+### Use Cases
+
+**Content Optimization:**
+```bash
+# Identify redundant content in documentation
+cc-token count --analyze README.md
+```
+
+**Code Review:**
+```bash
+# Find inefficient formatting in code files
+cc-token count --analyze main.go
+```
+
+**LLM Prompt Optimization:**
+```bash
+# Reduce token usage for API requests
+cc-token count --analyze prompt.txt
+```
+
+**Batch Analysis:**
+```bash
+# Analyze multiple files (run separately)
+for file in *.md; do
+  echo "=== $file ==="
+  cc-token count --analyze "$file" --plain
+done
+```
+
+### Analysis Details
+
+**Efficiency Score Calculation:**
+The efficiency score considers:
+- Total tokens vs. total characters
+- Whitespace and empty line usage
+- Average token-to-character ratio
+- Deviation from optimal density
+
+Higher scores indicate more efficient token usage.
+
+**Pattern Detection:**
+The analyzer identifies:
+- Consecutive empty lines (consolidation opportunity)
+- Repeated URLs and phrases (reference-style linking)
+- Long lines exceeding typical width (reformatting opportunity)
+- Unicode characters (potential high token cost)
+- Inefficient markdown formatting
+
+**Recommendation Prioritization:**
+Recommendations are sorted by:
+1. **Priority 1 (High Impact)**: Significant token savings, easy to implement
+2. **Priority 2 (Medium Impact)**: Moderate savings, may require minimal changes
+3. **Priority 3 (Low Impact)**: Small savings, consider for comprehensive cleanup
 
 ## Token Visualization
 

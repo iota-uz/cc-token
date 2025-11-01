@@ -11,12 +11,12 @@ import (
 
 // JSONFormatter formats output as JSON
 type JSONFormatter struct {
-	pricer *pricing.Pricer
+	pricingService *pricing.Pricer
 }
 
 // NewJSONFormatter creates a new JSON formatter
-func NewJSONFormatter(pricer *pricing.Pricer) *JSONFormatter {
-	return &JSONFormatter{pricer: pricer}
+func NewJSONFormatter(pricingService *pricing.Pricer) *JSONFormatter {
+	return &JSONFormatter{pricingService: pricingService}
 }
 
 // Format outputs results in JSON format
@@ -42,10 +42,15 @@ func (f *JSONFormatter) Format(results []*processor.Result, cfg *config.Config) 
 			item["files"] = result.CountFiles()
 		} else {
 			item["type"] = "file"
+			// Add line metrics for files
+			if result.LineCount > 0 {
+				item["line_count"] = result.LineCount
+				item["avg_tokens_per_line"] = result.AvgTokensPerLine
+			}
 		}
 
 		if cfg.ShowCost {
-			item["estimated_cost"] = f.pricer.CalculateCost(result.Tokens, cfg.Model)
+			item["estimated_cost"] = f.pricingService.CalculateCost(result.Tokens, cfg.Model)
 		}
 
 		output = append(output, item)

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	version = "1.1.1" // Fixed tokenization discrepancy with client-side tokenizer
+	version = "1.1.2" // Added tokens per line to count mode
 
 	// Default configuration values
 	defaultMaxFileSize = 2 * 1024 * 1024 // 2MB
@@ -21,10 +21,10 @@ const (
 )
 
 var (
-	cfg       *config.Config
-	apiClient *api.Client
-	cacheInst *cache.Cache
-	pricer    *pricing.Pricer
+	cfg            *config.Config
+	apiClient      *api.Client
+	cacheInst      *cache.Cache
+	pricingService *pricing.Pricer
 )
 
 // rootCmd represents the base command
@@ -48,8 +48,8 @@ It supports caching, parallel processing, and multiple output formats.`,
 		}
 
 		// Resolve model alias
-		pricer = pricing.New()
-		cfg.Model = pricer.ResolveModelAlias(cfg.Model)
+		pricingService = pricing.New()
+		cfg.Model = pricingService.ResolveModelAlias(cfg.Model)
 
 		// Validate API key (except for cache clear command)
 		if cmd.Name() != "clear" {
@@ -105,4 +105,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&cfg.Plain, "plain", false, "Use plain text output without ANSI colors")
 	rootCmd.PersistentFlags().StringVarP(&cfg.OutputFile, "output", "o", "", "Output file path for HTML export")
 	rootCmd.PersistentFlags().BoolVar(&cfg.NoBrowser, "no-browser", false, "Skip auto-opening browser for web visualization")
+	rootCmd.PersistentFlags().BoolVar(&cfg.Analyze, "analyze", false, "Perform comprehensive token optimization analysis (files only)")
 }
