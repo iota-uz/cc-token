@@ -23,6 +23,8 @@ go.work.sum
 
 # Build artifacts
 cc-token
+tmp/
+build-errors.log
 
 # IDE specific files
 .idea/

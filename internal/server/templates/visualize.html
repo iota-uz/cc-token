@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cc-token Visualizer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🎨 Token Visualization</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Tokens:</span>
+                    <span class="stat-value">{{ .Result.TotalTokens }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Characters:</span>
+                    <span class="stat-value">{{ len .Result.Content }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Model:</span>
+                    <span class="stat-value">{{ .Result.Model }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Cost:</span>
+                    <span class="stat-value">${{ printf "%.6f" .Result.Cost }}</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="controls">
+        <div class="controls-left">
+            <button id="view-toggle" class="btn">
+                <span id="view-icon">📝</span>
+                <span id="view-label">Switch to Table</span>
+            </button>
+            <button id="theme-toggle" class="btn">
+                <span id="theme-icon">🌙</span>
+                <span id="theme-label">Dark</span>
+            </button>
+        </div>
+        <div class="controls-right">
+            <div class="search-box">
+                <input type="search" id="search-input" placeholder="Search tokens... (Press / to focus)" />
+                <span id="search-count"></span>
+            </div>
+        </div>
+    </div>
+
+    <main class="main">
+        <!-- Text View -->
+        <div id="text-view" class="view-mode active">
+            <div class="content-wrapper">
+                {{ range $i, $token := .Result.Tokens }}
+                <span class="token token-color-{{ colorIndex $i }}"
+                      data-index="{{ $i }}"
+                      data-position="{{ $token.Position }}"
+                      data-length="{{ $token.Length }}"
+                      data-text="{{ $token.Text }}"
+                      title="Token #{{ $i }} | Pos: {{ $token.Position }} | Len: {{ $token.Length }}">{{ $token.Text }}</span>{{ end }}
+            </div>
+        </div>
+
+        <!-- Table View -->
+        <div id="table-view" class="view-mode">
+            <div class="table-wrapper">
+                <table class="token-table">
+                    <thead>
+                        <tr>
+                            <th>Index</th>
+                            <th>Token</th>
+                            <th>Position</th>
+                            <th>Length</th>
+                            <th>Bytes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ range $i, $token := .Result.Tokens }}
+                        <tr data-index="{{ $i }}">
+                            <td class="index-col">{{ $i }}</td>
+                            <td class="token-col">
+                                <code class="token-code token-color-{{ colorIndex $i }}">{{ $token.Text }}</code>
+                            </td>
+                            <td class="position-col">{{ $token.Position }}</td>
+                            <td class="length-col">{{ $token.Length }}</td>
+                            <td class="bytes-col">{{ len $token.Text }}</td>
+                            <td class="actions-col">
+                                <button class="btn-copy" data-text="{{ $token.Text }}" title="Copy token">📋</button>
+                            </td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Statistics Panel -->
+        <aside id="stats-panel" class="stats-panel">
+            <h3>Statistics</h3>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-card-label">Total Tokens</div>
+                    <div class="stat-card-value" id="stat-total">{{ .Result.TotalTokens }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Avg Length</div>
+                    <div class="stat-card-value" id="stat-avg">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Max Length</div>
+                    <div class="stat-card-value" id="stat-max">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Min Length</div>
+                    <div class="stat-card-value" id="stat-min">-</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <footer class="footer">
+        <div class="shortcuts">
+            <kbd>Tab</kbd> Switch view
+            <kbd>/</kbd> Search
+            <kbd>?</kbd> Help
+            <kbd>Esc</kbd> Clear search
+            <kbd>t</kbd> Toggle theme
+        </div>
+        <div class="footer-info">
+            cc-token v1.1.0 | <a href="https://github.com/iota-uz/cc-token" target="_blank">GitHub</a>
+        </div>
+    </footer>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Keyboard Shortcuts</h2>
+                <button id="close-help" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <table class="help-table">
+                    <tr>
+                        <td><kbd>Tab</kbd></td>
+                        <td>Switch between text and table view</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>/</kbd></td>
+                        <td>Focus search input</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Esc</kbd></td>
+                        <td>Clear search and deselect</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>?</kbd></td>
+                        <td>Show/hide this help dialog</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>t</kbd></td>
+                        <td>Toggle dark/light theme</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Click token</kbd></td>
+                        <td>Highlight and show details</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Ctrl+C</kbd> (terminal)</td>
+                        <td>Stop server</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
