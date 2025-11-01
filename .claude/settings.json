@@ -116,7 +116,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "templ generate && make fix imports && go vet ./... && make fix fmt"
+            "command": "go fmt ./... && go vet ./..."
           }
         ]
       }
@@ -126,7 +126,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "templ generate && make fix imports && go vet ./... && make fix fmt"
+            "command": "go fmt ./... && go vet ./..."
           }
         ]
       }
