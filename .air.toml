@@ -3,7 +3,7 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  args_bin = ["visualize", "interactive", "--no-browser", "--yes", "/tmp/test-viz.txt"]
+  args_bin = ["visualize", "interactive", "--no-browser", "--yes", "testdata/test.txt"]
   bin = "./tmp/main"
   cmd = "go build -o ./tmp/main ."
   delay = 1000
