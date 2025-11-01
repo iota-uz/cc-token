@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cc-token Visualization - {{ .Model }}</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg: #1a1a1a;
+            --color-bg-secondary: #252525;
+            --color-bg-tertiary: #2f2f2f;
+            --color-fg: #ffffff;
+            --color-fg-secondary: #b0b0b0;
+            --color-border: #404040;
+            --color-header: #5F5FFF;
+            --color-header-text: #ffffff;
+            --color-accent: #00D9FF;
+            --color-cyan: #00CED1;
+            --color-green: #00FF7F;
+            --color-yellow: #FFD700;
+            --color-blue: #4169E1;
+            --color-magenta: #FF1493;
+            --color-red: #FF6347;
+            --color-orange: #FF8C00;
+            --color-purple: #9370DB;
+            --color-lime: #32CD32;
+            --color-pink: #FF69B4;
+            --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Consolas', monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+
+        body.light-theme {
+            --color-bg: #ffffff;
+            --color-bg-secondary: #f5f5f5;
+            --color-bg-tertiary: #e8e8e8;
+            --color-fg: #1a1a1a;
+            --color-fg-secondary: #606060;
+            --color-border: #d0d0d0;
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--color-bg);
+            color: var(--color-fg);
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .header {
+            background: var(--color-header);
+            color: var(--color-header-text);
+            padding: 2rem 2.5rem;
+            border-bottom: 3px solid var(--color-accent);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .stats {
+            display: flex;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            gap: 0.75rem;
+            align-items: baseline;
+        }
+
+        .stat-label {
+            opacity: 0.85;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+        }
+
+        .controls {
+            background: var(--color-bg-secondary);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--color-border);
+            flex-wrap: wrap;
+        }
+
+        .controls-left, .controls-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--color-bg-tertiary);
+            color: var(--color-fg);
+            border: 1px solid var(--color-border);
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background: var(--color-accent);
+            color: var(--color-bg);
+            border-color: var(--color-accent);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 217, 255, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #search-input {
+            background: var(--color-bg-tertiary);
+            color: var(--color-fg);
+            border: 1px solid var(--color-border);
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            font-weight: 400;
+            width: 300px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #search-input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #search-count {
+            color: var(--color-fg-secondary);
+            font-size: 0.85rem;
+        }
+
+        .main {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem;
+            position: relative;
+        }
+
+        .view-mode {
+            display: none;
+        }
+
+        .view-mode.active {
+            display: block;
+        }
+
+        .content-wrapper {
+            line-height: 2.2;
+            white-space: normal;
+            word-wrap: break-word;
+            font-size: 0.95rem;
+        }
+
+        .token {
+            display: inline-block;
+            border: none;
+            border-radius: 6px;
+            padding: 2px 6px;
+            margin: 1px 0px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: pre;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+        }
+
+        .token:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            filter: brightness(1.1);
+            z-index: 10;
+        }
+
+        .token.highlighted {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .token-color-0 {
+            background: rgba(0, 206, 209, 0.25);
+            color: #00CED1;
+        }
+        .token-color-1 {
+            background: rgba(0, 255, 127, 0.25);
+            color: #00FF7F;
+        }
+        .token-color-2 {
+            background: rgba(255, 215, 0, 0.25);
+            color: #FFD700;
+        }
+        .token-color-3 {
+            background: rgba(65, 105, 225, 0.25);
+            color: #4169E1;
+        }
+        .token-color-4 {
+            background: rgba(255, 20, 147, 0.25);
+            color: #FF1493;
+        }
+        .token-color-5 {
+            background: rgba(255, 99, 71, 0.25);
+            color: #FF6347;
+        }
+        .token-color-6 {
+            background: rgba(255, 140, 0, 0.25);
+            color: #FF8C00;
+        }
+        .token-color-7 {
+            background: rgba(147, 112, 219, 0.25);
+            color: #9370DB;
+        }
+        .token-color-8 {
+            background: rgba(50, 205, 50, 0.25);
+            color: #32CD32;
+        }
+        .token-color-9 {
+            background: rgba(255, 105, 180, 0.25);
+            color: #FF69B4;
+        }
+
+        body.light-theme .token-color-0 {
+            background: rgba(0, 206, 209, 0.15);
+            color: #008B8D;
+        }
+        body.light-theme .token-color-1 {
+            background: rgba(0, 255, 127, 0.15);
+            color: #00A050;
+        }
+        body.light-theme .token-color-2 {
+            background: rgba(255, 215, 0, 0.20);
+            color: #B8860B;
+        }
+        body.light-theme .token-color-3 {
+            background: rgba(65, 105, 225, 0.15);
+            color: #2847A0;
+        }
+        body.light-theme .token-color-4 {
+            background: rgba(255, 20, 147, 0.15);
+            color: #C71585;
+        }
+        body.light-theme .token-color-5 {
+            background: rgba(255, 99, 71, 0.15);
+            color: #D2442D;
+        }
+        body.light-theme .token-color-6 {
+            background: rgba(255, 140, 0, 0.15);
+            color: #CC7000;
+        }
+        body.light-theme .token-color-7 {
+            background: rgba(147, 112, 219, 0.15);
+            color: #6A4A9E;
+        }
+        body.light-theme .token-color-8 {
+            background: rgba(50, 205, 50, 0.15);
+            color: #228B22;
+        }
+        body.light-theme .token-color-9 {
+            background: rgba(255, 105, 180, 0.15);
+            color: #DB5994;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--color-bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .token-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .token-table thead {
+            background: var(--color-bg-tertiary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .token-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .token-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .token-table tbody tr:hover {
+            background: var(--color-bg-tertiary);
+        }
+
+        .token-table tbody tr.highlighted {
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        .token-code {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: none;
+            font-family: var(--font-mono);
+            white-space: pre;
+            font-weight: 500;
+        }
+
+        .btn-copy {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0.25rem;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-copy:hover {
+            opacity: 1;
+        }
+
+        .stats-panel {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--color-bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .stats-panel h3 {
+            margin-bottom: 1rem;
+            color: var(--color-accent);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: var(--color-bg-tertiary);
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+        }
+
+        .stat-card-label {
+            font-size: 0.85rem;
+            color: var(--color-fg-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .footer {
+            background: var(--color-bg-secondary);
+            border-top: 1px solid var(--color-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .shortcuts {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--color-fg-secondary);
+        }
+
+        kbd {
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer-info {
+            font-size: 0.85rem;
+            color: var(--color-fg-secondary);
+        }
+
+        .footer-info a {
+            color: var(--color-accent);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 1rem; }
+            .header h1 { font-size: 1.3rem; }
+            .stats { gap: 1rem; }
+            .controls { padding: 1rem; flex-direction: column; align-items: stretch; }
+            .controls-left, .controls-right { width: 100%; justify-content: center; }
+            #search-input { width: 100%; }
+            .main { padding: 1rem; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--color-bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🎨 Token Visualization</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Tokens:</span>
+                    <span class="stat-value">{{ .TotalTokens }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Characters:</span>
+                    <span class="stat-value">{{ len .Content }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Model:</span>
+                    <span class="stat-value">{{ .Model }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Cost:</span>
+                    <span class="stat-value">${{ printf "%.6f" .Cost }}</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="controls">
+        <div class="controls-left">
+            <button id="view-toggle" class="btn">
+                <span id="view-icon">📝</span>
+                <span id="view-label">Switch to Table</span>
+            </button>
+            <button id="theme-toggle" class="btn">
+                <span id="theme-icon">🌙</span>
+                <span id="theme-label">Dark</span>
+            </button>
+        </div>
+        <div class="controls-right">
+            <div class="search-box">
+                <input type="search" id="search-input" placeholder="Search tokens... (Press / to focus)" />
+                <span id="search-count"></span>
+            </div>
+        </div>
+    </div>
+
+    <main class="main">
+        <div id="text-view" class="view-mode active">
+            <div class="content-wrapper">
+                {{ range $i, $token := .Tokens }}
+                <span class="token token-color-{{ colorIndex $i }}"
+                      data-index="{{ $i }}"
+                      data-position="{{ $token.Position }}"
+                      data-length="{{ $token.Length }}"
+                      data-text="{{ $token.Text }}"
+                      title="Token #{{ $i }} | Pos: {{ $token.Position }} | Len: {{ $token.Length }}">{{ $token.Text }}</span>{{ end }}
+            </div>
+        </div>
+
+        <div id="table-view" class="view-mode">
+            <div class="table-wrapper">
+                <table class="token-table">
+                    <thead>
+                        <tr>
+                            <th>Index</th>
+                            <th>Token</th>
+                            <th>Position</th>
+                            <th>Length</th>
+                            <th>Bytes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ range $i, $token := .Tokens }}
+                        <tr data-index="{{ $i }}">
+                            <td>{{ $i }}</td>
+                            <td>
+                                <code class="token-code token-color-{{ colorIndex $i }}">{{ $token.Text }}</code>
+                            </td>
+                            <td>{{ $token.Position }}</td>
+                            <td>{{ $token.Length }}</td>
+                            <td>{{ len $token.Text }}</td>
+                            <td>
+                                <button class="btn-copy" data-text="{{ $token.Text }}" title="Copy">📋</button>
+                            </td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <aside class="stats-panel">
+            <h3>Statistics</h3>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-card-label">Total Tokens</div>
+                    <div class="stat-card-value" id="stat-total">{{ .TotalTokens }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Avg Length</div>
+                    <div class="stat-card-value" id="stat-avg">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Max Length</div>
+                    <div class="stat-card-value" id="stat-max">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Min Length</div>
+                    <div class="stat-card-value" id="stat-min">-</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <footer class="footer">
+        <div class="shortcuts">
+            <kbd>Tab</kbd> Switch view
+            <kbd>/</kbd> Search
+            <kbd>Esc</kbd> Clear
+            <kbd>t</kbd> Theme
+        </div>
+        <div class="footer-info">
+            cc-token v1.1.0 | <a href="https://github.com/iota-uz/cc-token" target="_blank">GitHub</a>
+        </div>
+    </footer>
+
+    <script>
+        (function() {
+            'use strict';
+            let currentView = 'text';
+            let currentTheme = 'dark';
+            let tokens = [];
+
+            function init() {
+                tokens = Array.from(document.querySelectorAll('.token'));
+                calculateStatistics();
+                loadTheme();
+                setupEventListeners();
+            }
+
+            function calculateStatistics() {
+                const lengths = tokens.map(t => parseInt(t.dataset.length));
+                const avg = lengths.reduce((a, b) => a + b, 0) / lengths.length;
+                document.getElementById('stat-avg').textContent = avg.toFixed(1);
+                document.getElementById('stat-max').textContent = Math.max(...lengths);
+                document.getElementById('stat-min').textContent = Math.min(...lengths);
+            }
+
+            function setupEventListeners() {
+                document.getElementById('view-toggle').addEventListener('click', toggleView);
+                document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+                document.getElementById('search-input').addEventListener('input', handleSearch);
+
+                tokens.forEach((token, i) => {
+                    token.addEventListener('click', () => selectToken(i));
+                });
+
+                document.querySelectorAll('.token-table tbody tr').forEach((row, i) => {
+                    row.addEventListener('click', () => selectToken(i));
+                });
+
+                document.querySelectorAll('.btn-copy').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(btn.dataset.text);
+                        btn.textContent = '✓';
+                        setTimeout(() => btn.textContent = '📋', 1000);
+                    });
+                });
+
+                document.addEventListener('keydown', handleKeyboard);
+            }
+
+            function toggleView() {
+                const textView = document.getElementById('text-view');
+                const tableView = document.getElementById('table-view');
+                const label = document.getElementById('view-label');
+                const icon = document.getElementById('view-icon');
+
+                if (currentView === 'text') {
+                    currentView = 'table';
+                    textView.classList.remove('active');
+                    tableView.classList.add('active');
+                    label.textContent = 'Switch to Text';
+                    icon.textContent = '📊';
+                } else {
+                    currentView = 'text';
+                    tableView.classList.remove('active');
+                    textView.classList.add('active');
+                    label.textContent = 'Switch to Table';
+                    icon.textContent = '📝';
+                }
+            }
+
+            function toggleTheme() {
+                const label = document.getElementById('theme-label');
+                const icon = document.getElementById('theme-icon');
+
+                if (currentTheme === 'dark') {
+                    currentTheme = 'light';
+                    document.body.classList.add('light-theme');
+                    label.textContent = 'Light';
+                    icon.textContent = '☀️';
+                } else {
+                    currentTheme = 'dark';
+                    document.body.classList.remove('light-theme');
+                    label.textContent = 'Dark';
+                    icon.textContent = '🌙';
+                }
+                localStorage.setItem('cc-token-theme', currentTheme);
+            }
+
+            function loadTheme() {
+                const saved = localStorage.getItem('cc-token-theme');
+                if (saved === 'light') toggleTheme();
+            }
+
+            function handleSearch() {
+                const query = document.getElementById('search-input').value.toLowerCase().trim();
+                const count = document.getElementById('search-count');
+
+                if (!query) {
+                    tokens.forEach(t => t.classList.remove('highlighted'));
+                    document.querySelectorAll('.token-table tbody tr').forEach(r => r.classList.remove('highlighted'));
+                    count.textContent = '';
+                    return;
+                }
+
+                let matches = 0;
+                tokens.forEach((token, i) => {
+                    const isMatch = token.dataset.text.toLowerCase().includes(query);
+                    token.classList.toggle('highlighted', isMatch);
+                    document.querySelector('.token-table tbody tr[data-index="' + i + '"]').classList.toggle('highlighted', isMatch);
+                    if (isMatch) matches++;
+                });
+
+                count.textContent = matches + ' match' + (matches !== 1 ? 'es' : '');
+            }
+
+            function selectToken(index) {
+                tokens.forEach((t, i) => {
+                    t.classList.toggle('highlighted', i === index);
+                });
+                document.querySelectorAll('.token-table tbody tr').forEach((r, i) => {
+                    r.classList.toggle('highlighted', i === index);
+                });
+            }
+
+            function handleKeyboard(e) {
+                const isSearchFocused = document.activeElement === document.getElementById('search-input');
+
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    toggleView();
+                } else if (e.key === '/' && !isSearchFocused) {
+                    e.preventDefault();
+                    document.getElementById('search-input').focus();
+                } else if (e.key === 'Escape') {
+                    document.getElementById('search-input').value = '';
+                    handleSearch();
+                    document.getElementById('search-input').blur();
+                } else if (e.key === 't' && !isSearchFocused) {
+                    e.preventDefault();
+                    toggleTheme();
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>
