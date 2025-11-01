@@ -3,6 +3,17 @@ package config
 
 import "fmt"
 
+var (
+	// ValidVisualizationModes defines all supported visualization modes
+	ValidVisualizationModes = map[string]bool{
+		"basic":       true,
+		"interactive": true,
+		"html":        true,
+		"json":        true,
+		"plain":       true,
+	}
+)
+
 // Config holds CLI configuration
 type Config struct {
 	Model            string
@@ -20,6 +31,11 @@ type Config struct {
 	NoBrowser        bool   // Skip auto-opening browser for web modes
 }
 
+// IsValidVisualizationMode checks if the given mode is a valid visualization mode
+func IsValidVisualizationMode(mode string) bool {
+	return ValidVisualizationModes[mode]
+}
+
 // Validate checks if the configuration values are valid
 func (c *Config) Validate() error {
 	if c.Concurrency <= 0 {
@@ -28,7 +44,7 @@ func (c *Config) Validate() error {
 	if c.MaxSize <= 0 {
 		return fmt.Errorf("max-size must be greater than 0")
 	}
-	if c.Visualize != "" && c.Visualize != "basic" && c.Visualize != "interactive" && c.Visualize != "json" && c.Visualize != "plain" && c.Visualize != "html" {
+	if c.Visualize != "" && !IsValidVisualizationMode(c.Visualize) {
 		return fmt.Errorf("invalid visualization mode: %s (must be 'basic', 'interactive', 'html', 'json', or 'plain')", c.Visualize)
 	}
 	return nil

@@ -470,8 +470,12 @@
             <h1>🎨 Token Visualization</h1>
             <div class="stats">
                 <div class="stat-item">
-                    <span class="stat-label">Tokens:</span>
+                    <span class="stat-label">Content Tokens:</span>
                     <span class="stat-value">{{ .TotalTokens }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">API Tokens:</span>
+                    <span class="stat-value">{{ .APITokens }}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Characters:</span>
@@ -558,8 +562,12 @@
             <h3>Statistics</h3>
             <div class="stat-grid">
                 <div class="stat-card">
-                    <div class="stat-card-label">Total Tokens</div>
+                    <div class="stat-card-label">Content Tokens</div>
                     <div class="stat-card-value" id="stat-total">{{ .TotalTokens }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">API Tokens</div>
+                    <div class="stat-card-value" id="stat-api">{{ .APITokens }}</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-label">Avg Length</div>

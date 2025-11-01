@@ -12,7 +12,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const version = "1.1.0" // Added LLM-friendly output formats and web-based visualization
+const (
+	version = "1.1.1" // Fixed tokenization discrepancy with client-side tokenizer
+
+	// Default configuration values
+	defaultMaxFileSize = 2 * 1024 * 1024 // 2MB
+	defaultConcurrency = 5
+)
 
 var (
 	cfg       *config.Config
@@ -89,8 +95,8 @@ func init() {
 	// Global flags available to all commands
 	rootCmd.PersistentFlags().StringVarP(&cfg.Model, "model", "m", pricing.DefaultModel, "Model to use for token counting (supports aliases: sonnet, haiku, opus)")
 	rootCmd.PersistentFlags().StringSliceVarP(&cfg.Extensions, "ext", "e", []string{}, "File extensions to include (e.g., .go,.txt,.md)")
-	rootCmd.PersistentFlags().Int64Var(&cfg.MaxSize, "max-size", 2*1024*1024, "Maximum file size in bytes (default: 2MB)")
-	rootCmd.PersistentFlags().IntVarP(&cfg.Concurrency, "concurrency", "c", 5, "Number of concurrent API requests for directories")
+	rootCmd.PersistentFlags().Int64Var(&cfg.MaxSize, "max-size", defaultMaxFileSize, "Maximum file size in bytes (default: 2MB)")
+	rootCmd.PersistentFlags().IntVarP(&cfg.Concurrency, "concurrency", "c", defaultConcurrency, "Number of concurrent API requests for directories")
 	rootCmd.PersistentFlags().BoolVar(&cfg.ShowCost, "show-cost", true, "Show estimated API cost")
 	rootCmd.PersistentFlags().BoolVarP(&cfg.JSONOutput, "json", "j", false, "Output results in JSON format")
 	rootCmd.PersistentFlags().BoolVarP(&cfg.Verbose, "verbose", "v", false, "Enable verbose output")

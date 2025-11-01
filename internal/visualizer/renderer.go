@@ -13,15 +13,21 @@ type Renderer interface {
 	Render(result *Result) error
 }
 
-// OutputMode represents different output rendering modes
+// OutputMode represents the different visualization output formats available.
+// Each mode provides a different way to view and interact with tokenization results.
 type OutputMode string
 
 const (
-	ModeJSON        OutputMode = "json"        // JSON structured output
-	ModePlain       OutputMode = "plain"       // Plain text output (no ANSI)
-	ModeBasic       OutputMode = "basic"       // Colored terminal output
-	ModeInteractive OutputMode = "interactive" // Web-based interactive viewer
-	ModeHTML        OutputMode = "html"        // Static HTML export
+	// ModeJSON outputs structured JSON data for machine-readable processing and LLM consumption
+	ModeJSON OutputMode = "json"
+	// ModePlain outputs plain text with pipe delimiters, suitable for piping to other commands
+	ModePlain OutputMode = "plain"
+	// ModeBasic displays colored tokens in the terminal using ANSI colors
+	ModeBasic OutputMode = "basic"
+	// ModeInteractive launches a web server with an interactive browser-based UI
+	ModeInteractive OutputMode = "interactive"
+	// ModeHTML exports visualization to a self-contained static HTML file
+	ModeHTML OutputMode = "html"
 )
 
 // SelectRenderer chooses the appropriate renderer based on configuration
@@ -56,6 +62,11 @@ func SelectRenderer(cfg *config.Config, mode string) (Renderer, error) {
 	}
 }
 
+// isNonInteractiveMode checks if the current configuration uses a non-interactive output mode
+func isNonInteractiveMode(cfg *config.Config, mode string) bool {
+	return cfg.JSONOutput || cfg.Plain || mode == "json" || mode == "plain" || mode == "html"
+}
+
 // ShouldSkipConfirmation determines if cost confirmation should be skipped
 func ShouldSkipConfirmation(cfg *config.Config, mode string) bool {
 	// Skip confirmation if --yes flag is set
@@ -64,9 +75,5 @@ func ShouldSkipConfirmation(cfg *config.Config, mode string) bool {
 	}
 
 	// Auto-skip for non-interactive modes (JSON, plain text, HTML export)
-	if cfg.JSONOutput || cfg.Plain || mode == "json" || mode == "plain" || mode == "html" {
-		return true
-	}
-
-	return false
+	return isNonInteractiveMode(cfg, mode)
 }

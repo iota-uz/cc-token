@@ -28,6 +28,7 @@ func (r *WebRenderer) Render(result *Result) error {
 		Content:     result.Content,
 		Tokens:      result.Tokens,
 		TotalTokens: result.TotalTokens,
+		APITokens:   result.APITokens,
 		Model:       result.Model,
 		Cost:        result.Cost,
 	}

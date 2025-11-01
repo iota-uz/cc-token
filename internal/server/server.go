@@ -20,11 +20,19 @@ import (
 //go:embed templates/* static/*
 var content embed.FS
 
+const (
+	shutdownTimeout   = 5 * time.Second
+	startPort         = 8080
+	maxPortAttempts   = 100
+	browserStartDelay = 500 * time.Millisecond
+)
+
 // Result holds tokenization data for web visualization
 type Result struct {
 	Content     string
 	Tokens      []api.Token
-	TotalTokens int
+	TotalTokens int // Content-only tokens (visualized)
+	APITokens   int // API token count (includes overhead)
 	Model       string
 	Cost        float64
 }
@@ -93,7 +101,7 @@ func (s *Server) Start(result *Result, openBrowser bool) error {
 
 	// Open browser if requested
 	if openBrowser {
-		time.Sleep(500 * time.Millisecond) // Give server time to start
+		time.Sleep(browserStartDelay) // Give server time to start
 		url := fmt.Sprintf("http://%s", s.addr)
 		if err := browser.OpenURL(url); err != nil {
 			fmt.Fprintf(os.Stderr, "⚠️  Failed to open browser automatically: %v\n", err)
@@ -106,7 +114,7 @@ func (s *Server) Start(result *Result, openBrowser bool) error {
 	fmt.Fprintf(os.Stderr, "\n⏳ Shutting down server...\n")
 
 	// Graceful shutdown with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
@@ -138,10 +146,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 
 // findAvailablePort finds an available port starting from 8080
 func findAvailablePort() (int, error) {
-	startPort := 8080
-	maxAttempts := 100
-
-	for i := 0; i < maxAttempts; i++ {
+	for i := 0; i < maxPortAttempts; i++ {
 		port := startPort + i
 		addr := fmt.Sprintf("localhost:%d", port)
 
@@ -152,5 +157,5 @@ func findAvailablePort() (int, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("no available ports found in range %d-%d", startPort, startPort+maxAttempts)
+	return 0, fmt.Errorf("no available ports found in range %d-%d", startPort, startPort+maxPortAttempts)
 }

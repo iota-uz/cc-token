@@ -36,8 +36,9 @@ func (r *BasicRenderer) Render(result *Result) error {
 	fmt.Fprintln(os.Stdout)
 	fmt.Fprintln(os.Stdout, "Token Visualization")
 	fmt.Fprintln(os.Stdout, strings.Repeat("=", headerWidth))
-	fmt.Fprintf(os.Stdout, "Tokens: %d    Characters: %d    Model: %s\n",
-		result.TotalTokens, len(result.Content), result.Model)
+	fmt.Fprintf(os.Stdout, "Content Tokens: %d    API Tokens: %d (includes message overhead)\n",
+		result.TotalTokens, result.APITokens)
+	fmt.Fprintf(os.Stdout, "Characters: %d    Model: %s\n", len(result.Content), result.Model)
 	if result.Cost > 0 {
 		fmt.Fprintf(os.Stdout, "Estimated Cost: $%.6f\n", result.Cost)
 	}
@@ -58,17 +59,9 @@ func (r *BasicRenderer) Render(result *Result) error {
 
 	// Footer
 	fmt.Fprintln(os.Stdout, strings.Repeat("=", headerWidth))
-	fmt.Fprintf(os.Stdout, "Total: %d tokens\n", result.TotalTokens)
+	fmt.Fprintf(os.Stdout, "Content Tokens: %d  |  API Tokens: %d  |  Overhead: %d\n",
+		result.TotalTokens, result.APITokens, result.APITokens-result.TotalTokens)
 	fmt.Fprintln(os.Stdout, strings.Repeat("=", headerWidth))
 
 	return nil
-}
-
-// RenderBasic is a legacy function that wraps BasicRenderer for backward compatibility
-// Deprecated: Use BasicRenderer.Render() instead
-func RenderBasic(result *Result) {
-	renderer := &BasicRenderer{}
-	if err := renderer.Render(result); err != nil {
-		fmt.Fprintf(os.Stderr, "Error rendering: %v\n", err)
-	}
 }

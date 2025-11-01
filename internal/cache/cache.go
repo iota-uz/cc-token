@@ -11,6 +11,13 @@ import (
 	"time"
 )
 
+const (
+	// File and directory permissions
+	cacheDirPerm = 0755
+	// FilePerm is the default file permission for cache and export files
+	FilePerm = 0644
+)
+
 // Entry represents a cached token count
 type Entry struct {
 	Tokens   int       `json:"tokens"`
@@ -30,15 +37,15 @@ type Cache struct {
 func Load() (*Cache, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get home directory: %w", err)
 	}
 
 	cacheDir := filepath.Join(homeDir, ".cc-token")
 	cachePath := filepath.Join(cacheDir, "cache.json")
 
 	// Create cache directory if it doesn't exist
-	if err := os.MkdirAll(cacheDir, 0755); err != nil {
-		return nil, err
+	if err := os.MkdirAll(cacheDir, cacheDirPerm); err != nil {
+		return nil, fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
 	c := &Cache{
@@ -52,11 +59,11 @@ func Load() (*Cache, error) {
 		if os.IsNotExist(err) {
 			return c, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to read cache file: %w", err)
 	}
 
 	if err := json.Unmarshal(data, &c.entries); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse cache file: %w", err)
 	}
 
 	return c, nil
@@ -84,17 +91,21 @@ func (c *Cache) Save() error {
 
 	data, err := json.MarshalIndent(c.entries, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal cache data: %w", err)
 	}
 
-	return os.WriteFile(c.path, data, 0644)
+	if err := os.WriteFile(c.path, data, FilePerm); err != nil {
+		return fmt.Errorf("failed to write cache file: %w", err)
+	}
+
+	return nil
 }
 
 // Clear removes the cache file from disk and prints a confirmation message.
 func Clear() error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get home directory: %w", err)
 	}
 
 	cachePath := filepath.Join(homeDir, ".cc-token", "cache.json")

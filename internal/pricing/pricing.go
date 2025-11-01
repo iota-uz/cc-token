@@ -59,23 +59,6 @@ func (p *Pricer) CalculateCost(tokens int, model string) float64 {
 	return float64(tokens) * pricePerMillion / 1_000_000
 }
 
-// CalculateStreamingCost calculates the cost for streaming API (input + output tokens)
-func (p *Pricer) CalculateStreamingCost(inputTokens, outputTokens int, model string) float64 {
-	inputPrice, ok := modelPricing[model]
-	if !ok {
-		inputPrice = 3.00 // Default to Sonnet pricing
-	}
-
-	// Output tokens are typically 3x-5x more expensive than input tokens
-	// For now, we'll use a simplified 3x multiplier
-	outputPrice := inputPrice * 3.0
-
-	inputCost := float64(inputTokens) * inputPrice / 1_000_000
-	outputCost := float64(outputTokens) * outputPrice / 1_000_000
-
-	return inputCost + outputCost
-}
-
 // ResolveModelAlias converts short model aliases (haiku, sonnet, opus) to their full
 // model names. It performs case-insensitive matching and returns the original model
 // name if no alias is found.

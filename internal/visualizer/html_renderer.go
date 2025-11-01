@@ -13,6 +13,10 @@ import (
 //go:embed templates/static.html
 var htmlTemplate embed.FS
 
+const (
+	htmlFilePerm = 0644 // File permission for exported HTML files
+)
+
 // HTMLRenderer exports token visualization to a static HTML file
 type HTMLRenderer struct {
 	OutputFile  string // Path to save HTML file
@@ -42,7 +46,7 @@ func (r *HTMLRenderer) Render(result *Result) error {
 	}
 
 	// Write to file
-	if err := os.WriteFile(r.OutputFile, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(r.OutputFile, buf.Bytes(), htmlFilePerm); err != nil {
 		return fmt.Errorf("failed to write HTML file: %w", err)
 	}
 

@@ -7,7 +7,8 @@ import "github.com/iota-uz/cc-token/internal/api"
 type Result struct {
 	Content     string
 	Tokens      []api.Token
-	TotalTokens int // Total number of tokens
+	TotalTokens int // Total number of content tokens (from visualization)
+	APITokens   int // API token count (includes message overhead)
 	Model       string
 	Cost        float64 // Estimated cost in USD
 }

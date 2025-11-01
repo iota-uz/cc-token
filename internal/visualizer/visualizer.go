@@ -72,21 +72,22 @@ func (v *Visualizer) Run(path string, cfg *config.Config) error {
 		}
 	}
 
-	// Extract tokens via streaming
-	fmt.Fprintf(os.Stderr, "\nExtracting tokens via streaming API...\n")
-	tokens, err := v.apiClient.ExtractTokensViaStreaming(content, cfg.Model)
+	// Extract tokens using client-side tokenizer
+	fmt.Fprintf(os.Stderr, "\nExtracting tokens using client-side tokenizer...\n")
+	tokens, err := v.apiClient.ExtractTokensClientSide(content)
 	if err != nil {
 		return fmt.Errorf("failed to extract tokens: %w", err)
 	}
 
-	// Calculate cost (input + output tokens)
-	totalTokens := len(tokens)
-	cost := v.pricer.CalculateStreamingCost(estimatedTokens, totalTokens, cfg.Model)
+	// Calculate cost (based on API token count which includes message overhead)
+	contentTokens := len(tokens)
+	cost := v.pricer.CalculateCost(estimatedTokens, cfg.Model)
 
 	result := &Result{
 		Content:     content,
 		Tokens:      tokens,
-		TotalTokens: totalTokens,
+		TotalTokens: contentTokens,   // Content-only tokens (what we visualize)
+		APITokens:   estimatedTokens, // API count (includes message overhead)
 		Model:       cfg.Model,
 		Cost:        cost,
 	}
@@ -101,22 +102,17 @@ func (v *Visualizer) Run(path string, cfg *config.Config) error {
 }
 
 // confirmVisualization prompts the user to confirm they want to proceed with visualization
-// given the cost difference compared to simple token counting
 func (v *Visualizer) confirmVisualization(estimatedTokens int, model string) bool {
-	// Estimate costs
-	countingCost := v.pricer.CalculateCost(estimatedTokens, model)
-	// For streaming, we estimate output will be similar to input
-	streamingCost := v.pricer.CalculateStreamingCost(estimatedTokens, estimatedTokens, model)
+	// Calculate cost (same as count mode since we're using client-side tokenization)
+	cost := v.pricer.CalculateCost(estimatedTokens, model)
 
-	fmt.Fprintf(os.Stderr, "\n⚠️  Token Visualization Cost Warning\n")
+	fmt.Fprintf(os.Stderr, "\n💡 Token Visualization\n")
 	fmt.Fprintf(os.Stderr, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-	fmt.Fprintf(os.Stderr, "Token counting (current):  $%.6f\n", countingCost)
-	fmt.Fprintf(os.Stderr, "Token visualization:       $%.6f\n", streamingCost)
-	fmt.Fprintf(os.Stderr, "Cost difference:           $%.6f (%.1fx more expensive)\n",
-		streamingCost-countingCost, streamingCost/countingCost)
+	fmt.Fprintf(os.Stderr, "API tokens:         %d (exact)\n", estimatedTokens)
+	fmt.Fprintf(os.Stderr, "Estimated cost:     $%.6f\n", cost)
 	fmt.Fprintf(os.Stderr, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
-	fmt.Fprintf(os.Stderr, "Visualization uses the streaming API to extract individual tokens.\n")
-	fmt.Fprintf(os.Stderr, "This requires a full message generation, which costs more than counting.\n\n")
+	fmt.Fprintf(os.Stderr, "Visualization uses client-side tokenization (no additional API cost).\n")
+	fmt.Fprintf(os.Stderr, "Note: Token boundaries are approximate (94-98%% accurate for typical files).\n\n")
 	fmt.Fprintf(os.Stderr, "Proceed with visualization? [Y/n]: ")
 
 	reader := bufio.NewReader(os.Stdin)

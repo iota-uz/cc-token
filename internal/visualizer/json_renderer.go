@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // JSONRenderer outputs token visualization in JSON format (LLM-friendly)
@@ -20,13 +21,16 @@ type TokenJSON struct {
 
 // ResultJSON represents the complete visualization result in JSON format
 type ResultJSON struct {
-	Content     string      `json:"content"`      // Original content
-	Model       string      `json:"model"`        // Model used for tokenization
-	TotalTokens int         `json:"total_tokens"` // Total number of tokens
-	TotalChars  int         `json:"total_chars"`  // Total characters
-	TotalBytes  int         `json:"total_bytes"`  // Total bytes
-	Cost        float64     `json:"cost"`         // Estimated cost in USD
-	Tokens      []TokenJSON `json:"tokens"`       // Array of individual tokens
+	Content       string      `json:"content"`         // Original content
+	Model         string      `json:"model"`           // Model used for tokenization
+	ContentTokens int         `json:"content_tokens"`  // Content-only tokens (visualized)
+	APITokens     int         `json:"api_tokens"`      // API token count (includes overhead)
+	TotalChars    int         `json:"total_chars"`     // Total characters
+	TotalBytes    int         `json:"total_bytes"`     // Total bytes
+	TotalLines    int         `json:"total_lines"`     // Total lines in content
+	TokensPerLine float64     `json:"tokens_per_line"` // Average tokens per line
+	Cost          float64     `json:"cost"`            // Estimated cost in USD
+	Tokens        []TokenJSON `json:"tokens"`          // Array of individual tokens
 }
 
 // Render outputs the result as formatted JSON
@@ -47,15 +51,32 @@ func (r *JSONRenderer) Render(result *Result) error {
 		}
 	}
 
+	// Calculate line count and tokens per line
+	lineCount := strings.Count(result.Content, "\n")
+	if len(result.Content) > 0 && !strings.HasSuffix(result.Content, "\n") {
+		lineCount++ // Count last line if content doesn't end with newline
+	}
+	if lineCount == 0 {
+		lineCount = 1 // Minimum one line for non-empty content
+	}
+
+	tokensPerLine := 0.0
+	if lineCount > 0 {
+		tokensPerLine = float64(result.TotalTokens) / float64(lineCount)
+	}
+
 	// Build result structure
 	output := ResultJSON{
-		Content:     result.Content,
-		Model:       result.Model,
-		TotalTokens: result.TotalTokens,
-		TotalChars:  len(result.Content),
-		TotalBytes:  len([]byte(result.Content)),
-		Cost:        result.Cost,
-		Tokens:      tokens,
+		Content:       result.Content,
+		Model:         result.Model,
+		ContentTokens: result.TotalTokens,
+		APITokens:     result.APITokens,
+		TotalChars:    len(result.Content),
+		TotalBytes:    len([]byte(result.Content)),
+		TotalLines:    lineCount,
+		TokensPerLine: tokensPerLine,
+		Cost:          result.Cost,
+		Tokens:        tokens,
 	}
 
 	// Marshal to JSON with indentation for readability

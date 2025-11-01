@@ -30,7 +30,7 @@ func (f *TreeFormatter) Format(results []*processor.Result, cfg *config.Config) 
 		if result.IsDir {
 			printTreeNode(result, "", cfg.Verbose)
 			totalTokens += result.Tokens
-			totalFiles += countFiles(result)
+			totalFiles += result.CountFiles()
 		} else {
 			if result.Error != nil {
 				fmt.Fprintf(os.Stderr, "%s: ERROR - %v\n", result.Path, result.Error)
@@ -89,19 +89,4 @@ func printTreeNode(node *processor.Result, prefix string, verbose bool) {
 			}
 		}
 	}
-}
-
-func countFiles(result *processor.Result) int {
-	if !result.IsDir {
-		if result.Error == nil {
-			return 1
-		}
-		return 0
-	}
-
-	count := 0
-	for _, child := range result.Children {
-		count += countFiles(child)
-	}
-	return count
 }

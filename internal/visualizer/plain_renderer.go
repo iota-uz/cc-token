@@ -18,8 +18,9 @@ func (r *PlainRenderer) Render(result *Result) error {
 	// Header
 	fmt.Fprintln(os.Stdout, "Token Visualization (Plain Text)")
 	fmt.Fprintln(os.Stdout, strings.Repeat("=", 80))
-	fmt.Fprintf(os.Stdout, "Tokens: %d    Characters: %d    Model: %s\n",
-		result.TotalTokens, len(result.Content), result.Model)
+	fmt.Fprintf(os.Stdout, "Content Tokens: %d | API Tokens: %d (includes message overhead)\n",
+		result.TotalTokens, result.APITokens)
+	fmt.Fprintf(os.Stdout, "Characters: %d    Model: %s\n", len(result.Content), result.Model)
 	fmt.Fprintf(os.Stdout, "Estimated Cost: $%.6f\n", result.Cost)
 	fmt.Fprintln(os.Stdout, strings.Repeat("=", 80))
 	fmt.Fprintln(os.Stdout)
@@ -54,7 +55,8 @@ func (r *PlainRenderer) Render(result *Result) error {
 	}
 
 	fmt.Fprintln(os.Stdout, strings.Repeat("-", 80))
-	fmt.Fprintf(os.Stdout, "\nTotal: %d tokens\n", result.TotalTokens)
+	fmt.Fprintf(os.Stdout, "\nContent Tokens: %d  |  API Tokens: %d  |  Overhead: %d\n",
+		result.TotalTokens, result.APITokens, result.APITokens-result.TotalTokens)
 
 	return nil
 }

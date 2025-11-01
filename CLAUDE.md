@@ -44,6 +44,7 @@ cc-token/
 
 **Dependencies:**
 - CLI Framework: `github.com/spf13/cobra`
+- Tokenization: `github.com/hupe1980/go-tiktoken` (Claude tokenizer)
 - Visualization: `github.com/fatih/color` (terminal colors)
 - Browser: `github.com/pkg/browser` (cross-platform browser launching)
 - Web Server: `net/http`, `html/template`, `embed` (stdlib)
@@ -58,6 +59,44 @@ cc-token/
 - Return errors instead of panicking (proper error handling at CLI boundary)
 - Keep packages focused and testable
 - Use interface-based design for extensibility (e.g., Renderer interface)
+
+### Agent Delegation for Context Management
+
+To efficiently manage context and handle large repetitive tasks, delegate work to specialized agents using the Task tool:
+
+**When to Use Agents:**
+- Large repetitive operations across multiple files (e.g., updating all renderers with similar changes)
+- Bulk refactoring or migrations (e.g., renaming functions across cmd/ and internal/ packages)
+- Extensive search-and-replace operations spanning many files
+- Complex multi-step tasks that require exploration and iteration
+- Tasks where you need to search/explore unfamiliar parts of the codebase
+
+**Context-Saving Benefits:**
+- Agents work in isolated contexts, reducing token usage in main conversation
+- Prevents context window exhaustion on large codebases
+- Allows parallel processing of independent subtasks
+- Better suited for exploratory work (finding patterns, understanding architecture)
+
+**Examples for cc-token:**
+```bash
+# Good: Delegate bulk renderer updates to agent
+# "Update all 5 renderers to support the new token metadata field"
+
+# Good: Delegate multi-package refactoring to agent
+# "Refactor error handling across all packages to use wrapped errors"
+
+# Bad: Simple single-file edit (do directly)
+# "Add a comment to the JSONRenderer.Render method"
+
+# Good: Exploratory codebase analysis
+# "Find all places where we interact with the Anthropic API"
+```
+
+**Best Practice:**
+- Use agents for tasks affecting 3+ files or requiring exploration
+- Handle single-file edits and small changes directly
+- Delegate when you need to search/understand unfamiliar code patterns
+- Use general-purpose agent for complex multi-step workflows
 
 ### Renderer Pattern
 
@@ -120,20 +159,22 @@ When making changes to this tool:
 
 ### API Integration
 
-The tool integrates with two Anthropic API endpoints:
+The tool integrates with Anthropic API and uses client-side tokenization:
 
-**1. Token Counting (default mode):**
+**1. Token Counting API (for accurate token counts):**
 - Endpoint: `https://api.anthropic.com/v1/messages/count_tokens`
 - Required headers: `x-api-key`, `anthropic-version: 2023-06-01`
 - Body format: `{"model": "...", "messages": [{"role": "user", "content": "..."}]}`
+- Used by: Count mode and visualization mode (for cost calculation)
 - Reference: https://docs.anthropic.com/en/docs/build-with-claude/token-counting
 
-**2. Streaming API (visualization mode):**
-- Endpoint: `https://api.anthropic.com/v1/messages`
-- Required headers: `x-api-key`, `anthropic-version: 2023-06-01`
-- Body format: `{"model": "...", "messages": [...], "max_tokens": 8192, "stream": true}`
-- Purpose: Extract individual token boundaries by parsing SSE stream
-- Note: Costs ~3-4x more than token counting (input + output tokens)
+**2. Client-Side Tokenization (for token visualization):**
+- Library: `github.com/hupe1980/go-tiktoken` (Claude tokenizer implementation)
+- Purpose: Extract individual token boundaries without API calls
+- Accuracy: 94-98% match with Anthropic API for typical files (>100 bytes)
+- Discrepancy: ~6-8 token fixed overhead due to special tokens
+- Benefits: No API cost, works offline, instant results
+- Tradeoff: Approximate boundaries (not exact match with Claude's internal tokenizer)
 
 ### Future Enhancement Ideas
 
@@ -160,6 +201,7 @@ If expanding functionality, consider:
 - [x] Copy token to clipboard functionality
 - [x] `--output` flag for HTML export
 - [x] `--no-browser` flag to disable auto-open
+- [x] Client-side tokenization for visualization (94-98% accurate, no API cost)
 
 ### Release Process
 

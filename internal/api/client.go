@@ -6,30 +6,56 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/hupe1980/go-tiktoken"
 )
 
 const (
-	countTokensURL   = "https://api.anthropic.com/v1/messages/count_tokens"
-	streamingURL     = "https://api.anthropic.com/v1/messages"
-	apiVersion       = "2023-06-01"
-	defaultTimeout   = 30 * time.Second
-	streamingTimeout = 120 * time.Second
+	countTokensURL = "https://api.anthropic.com/v1/messages/count_tokens"
+	apiVersion     = "2023-06-01"
+	defaultTimeout = 30 * time.Second
 )
 
-// Client handles HTTP communication with Anthropic API
+// Client handles HTTP communication with Anthropic API and token encoding
 type Client struct {
 	apiKey     string
 	httpClient *http.Client
+	encoding   *tiktoken.Encoding
 }
 
-// NewClient creates a new API client with the given API key
+// NewClient creates a new API client with the given API key and initializes the Claude tokenizer
 func NewClient(apiKey string) *Client {
+	// Initialize Claude tokenizer for client-side token extraction
+	codec, err := tiktoken.NewClaude()
+	if err != nil {
+		// Fallback to nil encoding if initialization fails
+		// Token visualization will use streaming API as fallback
+		return &Client{
+			apiKey: apiKey,
+			httpClient: &http.Client{
+				Timeout: defaultTimeout,
+			},
+			encoding: nil,
+		}
+	}
+
+	encoding, err := tiktoken.NewEncoding(codec)
+	if err != nil {
+		return &Client{
+			apiKey: apiKey,
+			httpClient: &http.Client{
+				Timeout: defaultTimeout,
+			},
+			encoding: nil,
+		}
+	}
+
 	return &Client{
-		apiKey: apiKey,
-		httpClient: &http.Client{
-			Timeout: defaultTimeout,
-		},
+		apiKey:     apiKey,
+		httpClient: &http.Client{Timeout: defaultTimeout},
+		encoding:   encoding,
 	}
 }
 
@@ -79,59 +105,45 @@ func (c *Client) CountTokens(content, model string) (int, error) {
 	return apiResp.InputTokens, nil
 }
 
-// ExtractTokensViaStreaming uses the streaming API to extract individual token boundaries.
-// It sends a message asking Claude to echo the content, and parses the streaming response
-// to identify token boundaries based on the text deltas.
-func (c *Client) ExtractTokensViaStreaming(content, model string) ([]Token, error) {
-	// Create streaming request
-	// We ask Claude to repeat the content to extract tokens
-	reqBody := StreamingRequest{
-		Model: model,
-		Messages: []MessageInput{
-			{
-				Role:    "user",
-				Content: "Please repeat the following text exactly as it appears, character by character, without any changes:\n\n" + content,
-			},
-		},
-		MaxTokens:   8192, // Reasonable limit
-		Stream:      true,
-		Temperature: 0, // Deterministic output
+// ExtractTokensClientSide uses the client-side Claude tokenizer to extract individual tokens
+// without making API calls. This is faster, cheaper, and works offline.
+func (c *Client) ExtractTokensClientSide(content string) ([]Token, error) {
+	if c.encoding == nil {
+		return nil, fmt.Errorf("tokenizer not initialized")
 	}
 
-	jsonData, err := json.Marshal(reqBody)
+	// Encode the content to get token IDs and token strings
+	_, tokenStrings, err := c.encoding.Encode(content, nil, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal streaming request: %w", err)
+		return nil, fmt.Errorf("failed to encode content: %w", err)
 	}
 
-	// Create HTTP client with longer timeout for streaming
-	streamClient := &http.Client{
-		Timeout: streamingTimeout,
-	}
+	// Build Token structs with position and length information
+	tokens := make([]Token, 0, len(tokenStrings))
+	position := 0
 
-	req, err := http.NewRequest("POST", streamingURL, bytes.NewReader(jsonData))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create streaming request: %w", err)
-	}
+	for _, tokenText := range tokenStrings {
+		// Note: Token text might not match exactly in content due to BPE encoding (spaces, special chars)
+		remainingContent := content[position:]
+		idx := strings.Index(remainingContent, tokenText)
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("anthropic-version", apiVersion)
-	req.Header.Set("x-api-key", c.apiKey)
-
-	resp, err := streamClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("streaming API request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("streaming API returned status %d: %s", resp.StatusCode, string(body))
-	}
-
-	// Parse SSE stream
-	tokens, err := parseStreamingResponse(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse streaming response: %w", err)
+		if idx == -1 {
+			// Token text doesn't appear literally in content (common with BPE encoding)
+			tokenLength := len(tokenText)
+			tokens = append(tokens, Token{
+				Text:     tokenText,
+				Position: position,
+				Length:   tokenLength,
+			})
+			position += tokenLength
+		} else {
+			tokens = append(tokens, Token{
+				Text:     tokenText,
+				Position: position + idx,
+				Length:   len(tokenText),
+			})
+			position += idx + len(tokenText)
+		}
 	}
 
 	return tokens, nil

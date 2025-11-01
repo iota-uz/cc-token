@@ -48,14 +48,22 @@ func shouldIgnore(path, basePath string, patterns []string, isDir bool) bool {
 
 	// Check gitignore patterns
 	for _, pattern := range patterns {
-		matched, _ := filepath.Match(pattern, filepath.Base(relPath))
+		matched, err := filepath.Match(pattern, filepath.Base(relPath))
+		if err != nil {
+			// Skip malformed patterns
+			continue
+		}
 		if matched {
 			return true
 		}
 
 		// Check directory patterns
 		if isDir {
-			matched, _ = filepath.Match(pattern, filepath.Base(relPath)+"/")
+			matched, err = filepath.Match(pattern, filepath.Base(relPath)+"/")
+			if err != nil {
+				// Skip malformed patterns
+				continue
+			}
 			if matched {
 				return true
 			}

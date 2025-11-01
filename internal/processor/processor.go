@@ -98,16 +98,13 @@ func (p *Processor) processDirectory(dirPath string) (*Result, error) {
 			return err
 		}
 
-		// Skip directories in collection
 		if info.IsDir() {
-			// Check if directory should be ignored
 			if shouldIgnore(path, dirPath, gitignorePatterns, true) {
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
-		// Apply filters
 		if shouldIgnore(path, dirPath, gitignorePatterns, false) {
 			return nil
 		}
@@ -198,9 +195,10 @@ func (p *Processor) processFile(filePath string, info os.FileInfo) (*Result, err
 	// Check cache
 	var tokens int
 	var cached bool
+	var hash string
 
 	if p.cache != nil {
-		hash := cache.ComputeHash(content)
+		hash = cache.ComputeHash(content)
 		if entry, ok := p.cache.Get(filePath); ok {
 			if entry.Hash == hash && entry.Modified.Equal(info.ModTime()) {
 				tokens = entry.Tokens
@@ -221,7 +219,6 @@ func (p *Processor) processFile(filePath string, info os.FileInfo) (*Result, err
 
 		// Update cache
 		if p.cache != nil {
-			hash := cache.ComputeHash(content)
 			p.cache.Set(filePath, cache.Entry{
 				Tokens:   tokens,
 				Hash:     hash,

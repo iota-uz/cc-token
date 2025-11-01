@@ -39,7 +39,7 @@ func (f *JSONFormatter) Format(results []*processor.Result, cfg *config.Config) 
 
 		if result.IsDir {
 			item["type"] = "directory"
-			item["files"] = countFilesForJSON(result)
+			item["files"] = result.CountFiles()
 		} else {
 			item["type"] = "file"
 		}
@@ -54,19 +54,4 @@ func (f *JSONFormatter) Format(results []*processor.Result, cfg *config.Config) 
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(output)
-}
-
-func countFilesForJSON(result *processor.Result) int {
-	if !result.IsDir {
-		if result.Error == nil {
-			return 1
-		}
-		return 0
-	}
-
-	count := 0
-	for _, child := range result.Children {
-		count += countFilesForJSON(child)
-	}
-	return count
 }
