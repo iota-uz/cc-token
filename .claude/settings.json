@@ -70,6 +70,7 @@
       "WebSearch",
       "WebFetch(domain:pkg.go.dev)",
       "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:github.com)",
       "mcp__godoc-mcp__get_doc",
       "mcp__bloom__search_code",
       "mcp__devhub__get_logs",
