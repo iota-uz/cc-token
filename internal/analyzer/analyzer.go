@@ -895,20 +895,6 @@ func generateLLMSafetyRecommendations(safetyAnalysis *LLMSafetyAnalysis, totalTo
 	return recommendations
 }
 
-// deduplicateLines removes duplicate line numbers
-func deduplicateLines(lines []int) []int {
-	seen := make(map[int]bool)
-	result := make([]int, 0)
-	for _, line := range lines {
-		if !seen[line] {
-			seen[line] = true
-			result = append(result, line)
-		}
-	}
-	sort.Ints(result)
-	return result
-}
-
 // generateEnhancedRecommendations creates detailed actionable optimization advice
 func generateEnhancedRecommendations(
 	patterns *Patterns,

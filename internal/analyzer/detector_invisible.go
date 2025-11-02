@@ -78,20 +78,6 @@ func tryMergeInvisibleCharIssue(issues []*InvisibleCharIssue, lineNum int, charT
 	return nil
 }
 
-// isInvisibleChar checks if a rune is an invisible/zero-width character
-func isInvisibleChar(r rune) bool {
-	_, exists := zeroWidthCharMap[r]
-	return exists
-}
-
-// getInvisibleCharType returns the type of invisible character
-func getInvisibleCharType(r rune) string {
-	if charType, exists := zeroWidthCharMap[r]; exists {
-		return charType
-	}
-	return "unknown"
-}
-
 // isLikelyEvasion checks if invisible chars are used for evasion
 func isLikelyEvasion(line string, pos int) bool {
 	// Check context for suspicious patterns using set lookup
