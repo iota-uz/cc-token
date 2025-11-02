@@ -35,6 +35,7 @@ var (
 	markdownItalicRegex = regexp.MustCompile(`\*[^*]+\*|_[^_]+_`)
 	markdownLinkRegex   = regexp.MustCompile(`\[([^\]]+)\]\([^\)]+\)`)
 	markdownCodeRegex   = regexp.MustCompile("`[^`]+`")
+	urlRegex            = regexp.MustCompile(`https?://[^\s\)]+`)
 )
 
 // CategorizeTokens classifies tokens into categories

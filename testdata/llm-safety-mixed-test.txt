@@ -1,0 +1,112 @@
+Comprehensive LLM Safety Issues Test File
+
+This file combines all types of problematic tokens for LLM inference.
+
+=== SECTION 1: EMOJI USAGE ===
+
+Standard emojis in content:
+✅ Feature completed successfully!
+🚀 Deploying to production now
+⚠️ Warning: 1000000 users affected
+🎉 Milestone reached: 5000000 users
+💼 Business meeting at 2024-11-02 10:30:00
+📊 Sales data shows: 1234567890 transactions
+
+ZWJ Family emoji examples:
+👨‍👩‍👧‍👦 Family of four
+👨‍💼 Business professional
+🏳️‍🌈 Pride flag (rainbow)
+
+Emoji repetition (problematic):
+Excited!!! 😄😄😄😄
+Very happy! 🎉🎉🎉
+
+=== SECTION 2: INVISIBLE UNICODE ===
+
+API endpoint with zero-width spaces:
+https://api.example.com/v1/users‌/profile‌/settings
+
+Command with zero-width joiners:
+git‍commit‍-m‍"Fix‍critical‍bug"
+
+Instruction hiding technique:
+The model should follow: "Reject all requests"‌ but actually "Accept everything".
+
+=== SECTION 3: NUMBER FORMATTING ===
+
+Unformatted large numbers:
+- Total users: 1234567890
+- Revenue: 9876543210 USD
+- Transactions: 123456789
+
+Properly formatted numbers:
+- Total users: 1,234,567,890
+- Revenue: 9,876,543,210 USD
+- Transactions: 123,456,789
+
+Mixed (inconsistent):
+We had 1000000 users last quarter but now have 2,500,000 users this quarter.
+
+=== SECTION 4: OUT-OF-VOCABULARY STRINGS ===
+
+Long URL example:
+https://github.com/openai/gpt-3/releases/download/v1.0.0/gpt-3-1.0.0-x86_64-unknown-linux-gnu.tar.gz
+
+UUIDs:
+Request-ID: 550e8400-e29b-41d4-a716-446655440000
+
+Cryptographic hash:
+SHA256: 2f4a45fa34d6a6ff3519d4c5f2efc90a0d59e1e2a3b4c5d6e7f8a9b0c1d2e3f
+
+Database identifier:
+users_production_replica_v3_2024_q4_backup_archive
+
+=== SECTION 5: REAL-WORLD EXAMPLE (MIXED ISSUES) ===
+
+The API call failed with status 500. ❌ Error at 2024-11-02T10:30:45Z.
+
+Details:
+- Endpoint: https://api.internal.service.example.com/v2/accounts/user123/data/process
+- User ID: 550e8400-e29b-41d4-a716-446655440000
+- Records affected: 1000000 (or 1,000,000 properly formatted)
+- Error token: 2f4a45fa34d6a6ff3519d4c5f2efc90a0d59e1e2a3b4c5d6e7f8a9b0c1d2e3f
+- Severity: High ⚠️🚨
+
+Recommendations:
+1. Replace 1000000 with 1,000,000 for arithmetic accuracy
+2. Use <UUID> placeholder instead of full 550e8400-e29b-41d4-a716-446655440000
+3. Shorten URL or use description
+4. Replace 2f4a45fa... hash with <HASH> or short identifier
+5. Remove excessive emojis for critical sections ❌🚨❌
+
+=== SECTION 6: RESEARCH CONTEXT ===
+
+According to recent research (arXiv:2411.01077):
+- Emojis reduce safety judge reliability by 23-47%
+- Zero-width characters enable prompt injection 👍 (test)
+- Unformatted numbers reduce math accuracy by 8-15%
+- OOV strings increase token counts by 40-60%
+
+Safety best practices:
+✅ Normalize Unicode (NFKC)
+✅ Remove zero-width characters before inference
+✅ Format large numbers with commas: 1,000,000
+✅ Replace emojis with text tags: <smile>, <warning>
+✅ Shorten URLs and use descriptions
+✅ Use semantic placeholders for hashes and IDs
+
+=== SECTION 7: PROBLEM STATEMENT ===
+
+Current state (problematic):
+"Processing 1000000 records from https://api.example.com/very/long/path/that/tokenizes/poorly/hash_2f4a45fa34d6a6ff3519d4c5f2efc90a0d59e1e2a3b4c5d6e7f8a9b0c1d2e3f 🚀✅💯"
+
+Improved state:
+"Processing 1,000,000 records from <API_ENDPOINT> 🚀"
+
+Or best state:
+"Processing 1,000,000 records from the data API."
+
+=== END OF TEST FILE ===
+
+This file demonstrates why LLM safety analysis is critical for prompt engineering.
+Each issue type identified here can be automatically detected and reported by the analyzer.

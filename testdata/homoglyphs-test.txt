@@ -1,0 +1,22 @@
+Homoglyphs and Confusables Test File
+
+This file contains various confusable characters from different scripts to test UTS #39 detection.
+
+Example 1: Cyrillic confusables (lowercase)
+рау thе bіll (contains Cyrillic 'р', 'у', 'і' instead of Latin)
+
+Example 2: Cyrillic confusables (uppercase)
+МІCROЅOFT (contains Cyrillic 'М', 'І', 'Ѕ' instead of Latin)
+
+Example 3: Greek confusables (lowercase)
+gοοgle pаypal (contains Greek 'ο', 'α' instead of Latin)
+
+Example 4: Greek confusables (uppercase)
+ΒΕΤΑ ΤΕЅΤ (contains Greek 'Β', 'Ε', 'Τ', 'Α' instead of Latin)
+
+Example 5: Mathematical alphanumeric symbols
+𝐓𝐡𝐢𝐬 𝐢𝐬 𝐛𝐨𝐥𝐝 𝐭𝐞𝐱𝐭 (math bold)
+𝑇ℎ𝑖𝑠 𝑖𝑠 𝑖𝑡𝑎𝑙𝑖𝑐 𝑡𝑒𝑥𝑡 (math italic)
+
+Example 6: Fullwidth Latin characters
+ＴＨＩ

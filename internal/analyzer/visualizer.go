@@ -127,7 +127,7 @@ func (m *TokenDensityMap) FormatHeatmap() string {
 		// Hot indicator
 		hotIndicator := "  "
 		if block.IsHot {
-			hotIndicator = "🔥"
+			hotIndicator = "**"
 		}
 
 		// Format line

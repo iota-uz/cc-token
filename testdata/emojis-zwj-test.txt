@@ -1,0 +1,40 @@
+Emoji Detection Test File
+
+This file contains various types of emojis to test LLM safety analysis.
+
+Standard Emojis (single codepoint):
+😀 😃 😄 😁 😆 😅 🤣 😂
+😉 😊 😇 🙂 🙃 😌 😍 😘
+❤️ 💔 💕 💖 💗 💝 💟 💞
+🎉 🎊 🎈 🎀 🎁 🎂 🎃 🎄
+⭐ ✨ 🌟 💫 🌠 🔥 ⚡ 💥
+
+Standard emoji reactions in sentences:
+I love this! 😍 That's so funny! 😂 Amazing work! 🎉
+
+Zero-width Joiner (ZWJ) Sequences (multi-codepoint):
+👨‍👩‍👧‍👦 👨‍👩‍👧 👨‍👩‍👦 👨‍👨‍👧‍👦 👩‍👩‍👧‍👦
+👨‍🔬 👩‍🔬 👨‍💼 👩‍💼 👨‍⚖️ 👩‍⚖️
+👨‍🚀 👩‍🚀 👨‍🎨 👩‍🎨 👨‍🌾 👩‍🌾
+
+Skin tone variations (also use ZWJ):
+👋 👋🏻 👋🏼 👋🏽 👋🏾 👋🏿
+👨🏻‍💼 👨🏼‍💼 👨🏽‍💼 👨🏾‍💼 👨🏿‍💼
+
+Flags (which use regional indicator sequences):
+🇺🇸 🇬🇧 🇯🇵 🇩🇪 🇫🇷 🇮🇳 🇧🇷 🇨🇦
+
+Heart variants:
+❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔
+
+Mixed content with emojis:
+According to the documentation 📚, the API endpoint 🔗 is now available! ✅
+Deploy to production 🚀 with caution ⚠️ and monitoring 📊.
+
+Multiple emojis in close succession:
+👍✅💯🎯🏆🥇🌟
+
+Emojis as sentence enders (problematic for tokenization):
+That's great! 😄😄😄
+Congratulations! 🎉🎉🎉
+Love it! 💕💕💕

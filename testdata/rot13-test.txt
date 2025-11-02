@@ -1,0 +1,20 @@
+ROT13 Encoding Test File
+
+This file contains examples of ROT13-encoded text to test detection.
+
+Example 1: Normal text
+This is normal English text with typical vowel frequency.
+
+Example 2: ROT13 encoded text
+Guvf vf EBG13 rapbqrq grkg jvgu noabezny ibjry serdhrpal.
+
+Example 3: Another ROT13 example
+Lbh pna hfr EBG13 gb boshfpngr lbhe vagraq naq olcnff zbqrengvba.
+
+Example 4: Mixed content
+Normal text here.
+Gur dhvpx oebja sbk whzcf bire gur ynml qbt.
+More normal text.
+
+Example 5: Long ROT13 passage
+Gur EBG13 pvcure vf n fvzcyr yrggre fhofgvghgvba pvcure gung ercynprf n yrggre jvgu gur yrggre 13 cbfvgvbaf nsgre vg va gur nycunorg. Vg vf n glcr bs Pnrfne pvcure qrirybcrq va napvrag Ebzr. Orpnhfr gurer ner 26 yrggref va gur Ratyvfu nycunorg naq 26 = 2 k 13, gur EBG13 shapgvba vf vgf bja vaireFr; gung vf, gb haqb EBG13, gur fnzr nytbevguz vf nccyvrq, fb gur fnzr npgvba pna or hfrq sbe rapbqvat naq qrpbqvat.

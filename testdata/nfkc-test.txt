@@ -1,0 +1,36 @@
+NFKC Normalization Test File
+
+This file contains Unicode text that differs between NFC and NFKC normalization forms.
+
+Example 1: Compatibility characters
+Fullwidth Latin: ＡＢＣＤＥＦＧ
+Halfwidth Katakana: ｱｲｳｴｵ
+
+Example 2: Mathematical variants
+Math bold: 𝐀𝐁𝐂𝐃𝐄𝐅𝐆
+Math italic: 𝐴𝐵𝐶𝐷𝐸𝐹𝐺
+
+Example 3: Circled numbers
+① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩
+
+Example 4: Superscripts and subscripts
+x² + y² = z²
+H₂O + CO₂
+
+Example 5: Ligatures
+ﬁ ﬂ ﬀ ﬃ ﬄ
+
+Example 6: Roman numerals
+Ⅰ Ⅱ Ⅲ Ⅳ Ⅴ Ⅵ Ⅶ Ⅷ Ⅸ Ⅹ
+
+Example 7: Fractions
+½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙
+
+Example 8: Mixed compatibility forms
+Regular text with ﬁnance, café, and Ⅻth century references.
+
+Example 9: Fullwidth punctuation
+！？＠＃＄％＆＊（）
+
+Example 10: Squared and cubed
+km² cm³ m² m³

@@ -1,0 +1,50 @@
+ASCII Art Test File
+
+This file contains examples of ASCII art to test detection.
+
+Example 1: Box drawing
+┌─────────────────────┐
+│  Box with borders   │
+├─────────────────────┤
+│  Another section    │
+└─────────────────────┘
+
+Example 2: Simple ASCII art
+  /\_/\
+ ( o.o )
+  > ^ <
+
+Example 3: Table with ASCII characters
++----------+----------+----------+
+| Header 1 | Header 2 | Header 3 |
++----------+----------+----------+
+| Cell 1   | Cell 2   | Cell 3   |
++----------+----------+----------+
+
+Example 4: Banner
+ *********************************
+ *  IMPORTANT NOTICE             *
+ *  Please read carefully        *
+ *********************************
+
+Example 5: Complex ASCII art
+    /\___/\
+   /       \
+  |  o   o  |
+  |    ^    |
+  |   \_/   |
+   \_______/
+
+Example 6: Flow chart arrows
+  [Start] --> [Process] --> [Decision]
+              /       \
+            Yes        No
+             |          |
+          [Action]  [End]
+
+Example 7: Unicode box drawing
+╔═══════════════════╗
+║  Double borders   ║
+╠═══════════════════╣
+║  Section 2        ║
+╚═══════════════════╝

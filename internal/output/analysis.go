@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	separatorLine  = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	maxLinePreview = 80
 	topExpensiveN  = 25
 )
@@ -40,6 +39,11 @@ func (f *AnalysisFormatter) FormatAnalysis(analysis *analyzer.Analysis, filename
 
 	// Statistical analysis
 	f.printStatisticalAnalysis(analysis)
+
+	// LLM Safety Analysis
+	if analysis.LLMSafetyAnalysis != nil && analysis.LLMSafetyAnalysis.TotalIssues > 0 {
+		f.printLLMSafetyAnalysis(analysis)
+	}
 
 	// Top expensive lines
 	f.printTopExpensiveLines(analysis)
@@ -81,7 +85,6 @@ func (f *AnalysisFormatter) printHeader(filename string, analysis *analyzer.Anal
 		fmt.Println(subtitle)
 		fmt.Println(efficiency)
 	}
-	fmt.Println()
 }
 
 func (f *AnalysisFormatter) printDensityMap(analysis *analyzer.Analysis) {
@@ -89,10 +92,14 @@ func (f *AnalysisFormatter) printDensityMap(analysis *analyzer.Analysis) {
 		return
 	}
 
+	if !f.useColor {
+		// Skip heatmap in plain mode - too verbose with Unicode bars
+		return
+	}
+
 	f.printSectionHeader("TOKEN DENSITY HEATMAP")
 	heatmap := analysis.DensityMap.FormatHeatmap()
 	fmt.Print(heatmap)
-	fmt.Println()
 }
 
 func (f *AnalysisFormatter) printCategoryBreakdown(analysis *analyzer.Analysis) {
@@ -107,13 +114,12 @@ func (f *AnalysisFormatter) printCategoryBreakdown(analysis *analyzer.Analysis) 
 		name   string
 		tokens int
 		pct    float64
-		icon   string
 	}{
-		{"Prose", analysis.CategoryBreakdown.Prose, stats.Prose, "📝"},
-		{"Code Blocks", analysis.CategoryBreakdown.CodeBlocks, stats.CodeBlocks, "💻"},
-		{"URLs", analysis.CategoryBreakdown.URLs, stats.URLs, "🔗"},
-		{"Formatting", analysis.CategoryBreakdown.Formatting, stats.Formatting, "✨"},
-		{"Whitespace", analysis.CategoryBreakdown.Whitespace, stats.Whitespace, "⬜"},
+		{"Prose", analysis.CategoryBreakdown.Prose, stats.Prose},
+		{"Code Blocks", analysis.CategoryBreakdown.CodeBlocks, stats.CodeBlocks},
+		{"URLs", analysis.CategoryBreakdown.URLs, stats.URLs},
+		{"Formatting", analysis.CategoryBreakdown.Formatting, stats.Formatting},
+		{"Whitespace", analysis.CategoryBreakdown.Whitespace, stats.Whitespace},
 	}
 
 	for _, cat := range categories {
@@ -121,23 +127,16 @@ func (f *AnalysisFormatter) printCategoryBreakdown(analysis *analyzer.Analysis) 
 			continue
 		}
 
-		icon := cat.icon
-		if !f.useColor {
-			icon = "" // No emojis in plain mode
-		}
-
-		bar := analyzer.RenderCategoryBar(cat.pct, 24)
-		line := fmt.Sprintf("%-15s %s %6d tokens (%5.1f%%)",
-			icon+" "+cat.name+":", bar, cat.tokens, cat.pct)
-
 		if f.useColor {
+			bar := analyzer.RenderCategoryBar(cat.pct, 24)
+			line := fmt.Sprintf("%-15s %s %6d tokens (%5.1f%%)",
+				cat.name+":", bar, cat.tokens, cat.pct)
 			color.New(color.FgWhite).Println(line)
 		} else {
-			fmt.Println(line)
+			// Plain mode: simple format without bars
+			fmt.Printf("%s: %d tokens (%.1f%%)\n", cat.name, cat.tokens, cat.pct)
 		}
 	}
-
-	fmt.Println()
 }
 
 func (f *AnalysisFormatter) printStatisticalAnalysis(analysis *analyzer.Analysis) {
@@ -178,53 +177,35 @@ func (f *AnalysisFormatter) printStatisticalAnalysis(analysis *analyzer.Analysis
 			fmt.Println(wasteLine)
 		}
 	}
-
-	fmt.Println()
 }
 
 func (f *AnalysisFormatter) printQuickWins(analysis *analyzer.Analysis) {
 	f.printSectionHeader("QUICK WINS (Easy + High Impact)")
 
 	for _, rec := range analysis.QuickWins {
-		icon := "⚡"
-		if !f.useColor {
-			icon = "•"
-		}
-
-		title := fmt.Sprintf("%s %s", icon, rec.Title)
-		savings := fmt.Sprintf("   Savings: ~%d tokens (%.1f%%)", rec.EstimatedSave, rec.SavePercentage)
-
 		if f.useColor {
+			title := fmt.Sprintf("• %s", rec.Title)
+			savings := fmt.Sprintf("  Savings: ~%d tokens (%.1f%%)", rec.EstimatedSave, rec.SavePercentage)
 			color.New(color.Bold, color.FgGreen).Println(title)
 			color.New(color.Faint).Println(savings)
-		} else {
-			fmt.Println(title)
-			fmt.Println(savings)
-		}
 
-		// Before/After if available
-		if rec.BeforeExample != "" && rec.AfterExample != "" {
-			before := fmt.Sprintf("   Before: %s", rec.BeforeExample)
-			after := fmt.Sprintf("   After:  %s", rec.AfterExample)
-			if f.useColor {
+			// Before/After if available
+			if rec.BeforeExample != "" && rec.AfterExample != "" {
+				before := fmt.Sprintf("  Before: %s", rec.BeforeExample)
+				after := fmt.Sprintf("  After:  %s", rec.AfterExample)
 				color.New(color.Faint).Println(before)
 				color.New(color.FgGreen, color.Faint).Println(after)
-			} else {
-				fmt.Println(before)
-				fmt.Println(after)
 			}
-		}
 
-		if rec.Description != "" {
-			desc := fmt.Sprintf("   %s", rec.Description)
-			if f.useColor {
+			if rec.Description != "" {
+				desc := fmt.Sprintf("  %s", rec.Description)
 				color.New(color.Faint).Println(desc)
-			} else {
-				fmt.Println(desc)
 			}
+		} else {
+			// Plain mode: compact single-line format
+			fmt.Printf("%s (Impact: %d tokens, %.1f%%)\n",
+				rec.Title, rec.EstimatedSave, rec.SavePercentage)
 		}
-
-		fmt.Println()
 	}
 }
 
@@ -243,7 +224,7 @@ func (f *AnalysisFormatter) printTopExpensiveLines(analysis *analyzer.Analysis) 
 		len(topLines), totalTopTokens, percentage))
 
 	// Print each line
-	for i, line := range topLines {
+	for _, line := range topLines {
 		if line.Tokens < 3 {
 			break // Stop showing very low token lines
 		}
@@ -274,12 +255,7 @@ func (f *AnalysisFormatter) printTopExpensiveLines(analysis *analyzer.Analysis) 
 			fmt.Printf("  %s\n", preview)
 		}
 
-		if i < len(topLines)-1 {
-			fmt.Println()
-		}
 	}
-
-	fmt.Println()
 }
 
 func (f *AnalysisFormatter) printRecommendations(analysis *analyzer.Analysis) {
@@ -290,16 +266,11 @@ func (f *AnalysisFormatter) printRecommendations(analysis *analyzer.Analysis) {
 	f.printSectionHeader("OPTIMIZATION RECOMMENDATIONS")
 
 	for _, rec := range analysis.Recommendations {
-		icon := "🔹"
-		if !f.useColor {
-			icon = "•"
-		}
-
-		title := fmt.Sprintf("%s %s", icon, rec.Title)
-		savings := fmt.Sprintf("   Savings: ~%d tokens (%.1f%%)",
-			rec.EstimatedSave, rec.SavePercentage)
-
 		if f.useColor {
+			title := fmt.Sprintf("• %s", rec.Title)
+			savings := fmt.Sprintf("  Savings: ~%d tokens (%.1f%%)",
+				rec.EstimatedSave, rec.SavePercentage)
+
 			if rec.Priority == 1 {
 				color.New(color.Bold, color.FgGreen).Println(title)
 			} else if rec.Priority == 2 {
@@ -308,47 +279,193 @@ func (f *AnalysisFormatter) printRecommendations(analysis *analyzer.Analysis) {
 				color.New(color.FgWhite).Println(title)
 			}
 			color.New(color.Faint).Println(savings)
-		} else {
-			fmt.Println(title)
-			fmt.Println(savings)
-		}
 
-		if rec.Description != "" {
-			desc := fmt.Sprintf("   %s", rec.Description)
-			if f.useColor {
+			if rec.Description != "" {
+				desc := fmt.Sprintf("   %s", rec.Description)
 				color.New(color.Faint).Println(desc)
-			} else {
-				fmt.Println(desc)
 			}
-		}
 
-		if len(rec.AffectedLines) > 0 && len(rec.AffectedLines) <= 10 {
-			lines := "   Lines: "
-			for i, lineNum := range rec.AffectedLines {
-				if i > 0 {
-					lines += ", "
+			if len(rec.AffectedLines) > 0 && len(rec.AffectedLines) <= 10 {
+				lines := "   Lines: "
+				for i, lineNum := range rec.AffectedLines {
+					if i > 0 {
+						lines += ", "
+					}
+					lines += fmt.Sprintf("%d", lineNum)
+					if i >= 9 {
+						lines += fmt.Sprintf(", ... (%d more)", len(rec.AffectedLines)-10)
+						break
+					}
 				}
-				lines += fmt.Sprintf("%d", lineNum)
-				if i >= 9 {
-					lines += fmt.Sprintf(", ... (%d more)", len(rec.AffectedLines)-10)
-					break
-				}
-			}
-			if f.useColor {
 				color.New(color.Faint).Println(lines)
-			} else {
-				fmt.Println(lines)
-			}
-		} else if len(rec.AffectedLines) > 10 {
-			lines := fmt.Sprintf("   %d lines affected", len(rec.AffectedLines))
-			if f.useColor {
+			} else if len(rec.AffectedLines) > 10 {
+				lines := fmt.Sprintf("   %d lines affected", len(rec.AffectedLines))
 				color.New(color.Faint).Println(lines)
-			} else {
-				fmt.Println(lines)
 			}
-		}
+		} else {
+			// Plain mode: compact format with priority indicator
+			priority := ""
+			if rec.Priority == 1 {
+				priority = "[HIGH] "
+			} else if rec.Priority == 2 {
+				priority = "[MED] "
+			} else {
+				priority = "[LOW] "
+			}
 
-		fmt.Println()
+			fmt.Printf("%s%s (Impact: %d tokens, %.1f%%",
+				priority, rec.Title, rec.EstimatedSave, rec.SavePercentage)
+
+			if len(rec.AffectedLines) > 0 {
+				fmt.Printf(", %d lines", len(rec.AffectedLines))
+			}
+			fmt.Println(")")
+		}
+	}
+}
+
+// IssueSection represents a formatted issue section
+type IssueSection struct {
+	Title       string
+	Count       int
+	Impact      string
+	Fix         string
+	CriticalMsg string // optional critical warning
+}
+
+func (f *AnalysisFormatter) printIssueSection(section IssueSection) {
+	f.printSubheader(section.Title)
+	fmt.Printf("  Found %d %s\n", section.Count, section.Title)
+
+	if section.CriticalMsg != "" {
+		if f.useColor {
+			color.New(color.FgRed, color.Bold).Printf("  %s\n", section.CriticalMsg)
+		} else {
+			fmt.Printf("  %s\n", section.CriticalMsg)
+		}
+	}
+
+	fmt.Printf("  Impact: %s\n", section.Impact)
+	fmt.Printf("  Fix: %s\n", section.Fix)
+}
+
+func (f *AnalysisFormatter) printLLMSafetyAnalysis(analysis *analyzer.Analysis) {
+	safetyAnalysis := analysis.LLMSafetyAnalysis
+	if safetyAnalysis == nil {
+		return
+	}
+
+	f.printSectionHeader(fmt.Sprintf("LLM SAFETY ANALYSIS (Reliability Score: %d/100)", safetyAnalysis.ReliabilityScore))
+
+	// Count evasion patterns
+	evasionCount := 0
+	for _, issue := range safetyAnalysis.InvisibleCharIssues {
+		if issue.IsEvasion {
+			evasionCount++
+		}
+	}
+
+	criticalMsg := ""
+	if evasionCount > 0 {
+		criticalMsg = fmt.Sprintf("CRITICAL: %d potential prompt injection/evasion patterns detected!", evasionCount)
+	}
+
+	// Define issue sections
+	// Count Trojan Source patterns for BiDi controls
+	trojanSourceMsg := ""
+	trojanSourceCount := 0
+	for _, issue := range safetyAnalysis.BiDiControlIssues {
+		if issue.IsTrojanSource {
+			trojanSourceCount++
+		}
+	}
+	if trojanSourceCount > 0 {
+		trojanSourceMsg = fmt.Sprintf("CRITICAL: %d Trojan Source attack patterns detected!", trojanSourceCount)
+	}
+
+	sections := []IssueSection{
+		{
+			Title:  "emoji issues (tokenization cost)",
+			Count:  len(safetyAnalysis.EmojiIssues),
+			Impact: "Reduce judge reliability by 23-47% (arXiv:2411.01077)",
+			Fix:    "Replace emojis with text tags (:smile:, :rocket:, etc.)",
+		},
+		{
+			Title:       "invisible character issues (zero-width, control chars)",
+			Count:       len(safetyAnalysis.InvisibleCharIssues),
+			Impact:      "Enable prompt injection, confuse model reasoning (Trend Micro 2025)",
+			Fix:         "Remove all zero-width and invisible characters",
+			CriticalMsg: criticalMsg,
+		},
+		{
+			Title:       "BiDi control characters (Trojan Source)",
+			Count:       len(safetyAnalysis.BiDiControlIssues),
+			Impact:      "Enable code injection attacks (CVE-2021-42574)",
+			Fix:         "Remove all bidirectional text control characters",
+			CriticalMsg: trojanSourceMsg,
+		},
+		{
+			Title:  "homoglyphs/confusable characters",
+			Count:  len(safetyAnalysis.ConfusableIssues),
+			Impact: "Enable spoofing and phishing attacks (UTS #39)",
+			Fix:    "Replace with ASCII equivalents or flag mixed-script identifiers",
+		},
+		{
+			Title:  "encoded/obfuscated text (Base64, hex, leetspeak)",
+			Count:  len(safetyAnalysis.EncodingIssues),
+			Impact: "Bypass moderation and confuse models (NeurIPS 2024 JAM)",
+			Fix:    "Decode or remove encoded text before processing",
+		},
+		{
+			Title:  "Unicode normalization issues",
+			Count:  len(safetyAnalysis.NormalizationIssues),
+			Impact: "Cause tokenization inconsistencies (UAX #15)",
+			Fix:    "Normalize all text to NFC form",
+		},
+		{
+			Title:  "glitch tokens",
+			Count:  len(safetyAnalysis.GlitchTokenIssues),
+			Impact: "Cause unstable model behavior (arXiv:2404.09894)",
+			Fix:    "Remove or space-separate known glitch tokens",
+		},
+		{
+			Title:  "long context placement issues",
+			Count:  len(safetyAnalysis.ContextIssues),
+			Impact: "Reduce attention to middle sections (arXiv:2307.03172)",
+			Fix:    "Move key facts to start/end; add TL;DR and recap",
+		},
+		{
+			Title:  "prompt ambiguity patterns",
+			Count:  len(safetyAnalysis.AmbiguityIssues),
+			Impact: "Reduce truthfulness and accuracy (PLOS ONE 2025)",
+			Fix:    "Clarify instructions; remove sycophantic framing",
+		},
+		{
+			Title:  "unformatted large numbers",
+			Count:  len(safetyAnalysis.NumberFormatIssues),
+			Impact: "Reduces arithmetic accuracy by 8-15%",
+			Fix:    "Format with commas (1,234,567 instead of 1234567)",
+		},
+		{
+			Title:  "OOV strings (URLs, hashes, IDs, tokens)",
+			Count:  len(safetyAnalysis.OOVStringIssues),
+			Impact: "Split into many subword tokens, harming embeddings (arXiv:2406.08477)",
+			Fix:    "Use semantic placeholders (<URL>, <HASH>, <UUID>, <TOKEN>)",
+		},
+	}
+
+	for _, section := range sections {
+		if section.Count > 0 {
+			f.printIssueSection(section)
+		}
+	}
+}
+
+func (f *AnalysisFormatter) printSubheader(title string) {
+	if f.useColor {
+		color.New(color.FgYellow, color.Bold).Printf("  • %s\n", title)
+	} else {
+		fmt.Printf("  • %s\n", title)
 	}
 }
 
@@ -360,13 +477,8 @@ func (f *AnalysisFormatter) printSummary(analysis *analyzer.Analysis) {
 
 func (f *AnalysisFormatter) printSectionHeader(title string) {
 	if f.useColor {
-		color.New(color.FgCyan).Println(separatorLine)
-		color.New(color.Bold, color.FgWhite).Println(title)
-		color.New(color.FgCyan).Println(separatorLine)
+		color.New(color.Bold, color.FgCyan).Printf("## %s\n", title)
 	} else {
-		fmt.Println(separatorLine)
-		fmt.Println(title)
-		fmt.Println(separatorLine)
+		fmt.Printf("## %s\n", title)
 	}
-	fmt.Println()
 }

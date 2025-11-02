@@ -1,0 +1,46 @@
+Expanded Glitch Tokens Test File
+
+This file contains examples of the newly added glitch tokens.
+
+Example 1: InstoreAndOnline pattern
+This product is available InstoreAndOnline for purchase.
+
+Example 2: GUI-related glitch tokens
+The application uses guiActiveUnfocused state and guiIcon resources.
+Settings include guiName configuration.
+
+Example 3: External reference patterns
+Link to externalTo resources and guiActiveUn state.
+
+Example 4: Corrupted encoding tokens
+Text with ÃÂÃÂÃÂÃÂ and ÃÂ characters showing encoding issues.
+
+Example 5: Russian admin token
+Use админист role for system access.
+
+Example 6: HTML injection patterns
+Code snippet: "><script>alert('test')</script></"
+
+Example 7: Delivery and buyable patterns
+Check DeliveryDate for BuyableInstoreAndOnline items.
+Also oreAndOnline and oreAndOnlineOnly variants.
+
+Example 8: Message and framework tokens
+Using MessageLookupByLibrary and MessageType definitions.
+ForgeModLoader configuration required.
+PsyNetMessage protocol active.
+
+Example 9: Input method tokens
+Configure InputMethodManager settings.
+
+Example 10: Japanese glitch token
+龍喚士 character appears in text.
+
+Example 11: Rotation and escape tokens
+Apply attRot transformation with \< escape sequence.
+
+Example 12: Nitrome variants
+Reference to TheNitrome and SolidGold tokens.
+
+Example 13: Combined glitch tokens
+System uses rawdownload and cloneembedreportprint for operations.

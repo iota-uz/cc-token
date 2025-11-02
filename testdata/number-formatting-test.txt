@@ -1,0 +1,57 @@
+Number Formatting and Tokenization Test
+
+This file contains examples of number formatting that affects arithmetic performance in LLMs.
+
+Unformatted Numbers (left-to-right, may hurt arithmetic):
+The population is 1234567890 people.
+Total sales reached 98765432100 dollars.
+Calculate: 123456789 + 987654321 = ?
+Database contains 1000000000 records.
+The value is 123456789012345678 in the system.
+
+Large numbers in context:
+We processed 50000000 transactions last year.
+The market cap reached 250000000000 dollars.
+Storage limit: 1000000000000 bytes
+
+Decimal numbers unformatted:
+Pi is approximately 3141592653589793
+The rate is 123456789123456789 basis points
+Distance: 299792458 meters per second
+
+Formatted Numbers (comma-grouped, GPT-style, recommended):
+The population is 1,234,567,890 people.
+Total sales reached 98,765,432,100 dollars.
+Calculate: 123,456,789 + 987,654,321 = ?
+Database contains 1,000,000,000 records.
+The value is 123,456,789,012,345,678 in the system.
+
+Large numbers with proper formatting:
+We processed 50,000,000 transactions last year.
+The market cap reached 250,000,000,000 dollars.
+Storage limit: 1,000,000,000,000 bytes
+
+Decimal numbers formatted:
+Pi is approximately 3.141,592,653,589,793 (or 3.141592653589793 depending on locale)
+The rate is 123,456,789,123,456,789 basis points
+Distance: 299,792,458 meters per second
+
+Mixed formatting (problematic):
+The company had 1000000 employees and 999999 customers.
+But after restructuring, it was 750,000 employees and 850,000 customers.
+Inconsistency: 500000 vs 500,000 in same document.
+
+Arithmetic examples highlighting tokenization impact:
+Wrong approach: 1234567 + 987654 = ?
+Better approach: 1,234,567 + 987,654 = ?
+
+Scientific notation (alternative formatting):
+The number is 1.23e6 (or 1,230,000 formatted)
+Calculate: 5e9 + 2e8 = ? (or 5,000,000,000 + 200,000,000)
+
+Recommendations for LLM prompts:
+1. Always format large numbers with commas: 1,000,000 not 1000000
+2. Use consistent formatting throughout: 1,000 and 2,000 not 1,000 and 2000
+3. For critical arithmetic, break numbers into components: "one million two hundred thirty-four thousand five hundred sixty-seven"
+4. Validate number formatting in both input and output
+5. Be aware that unformatted numbers can reduce accuracy by 5-15%
